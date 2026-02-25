@@ -7,13 +7,27 @@ import { useAuth } from '@/lib/hooks/use-auth'
 import { Header } from '@/components/layout/header'
 import { Loader2, Package, Users, Building2, Menu, X } from 'lucide-react'
 
+// Helper to get cached role from sessionStorage
+const getCachedRole = (): string | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const profile = sessionStorage.getItem('userProfile')
+    if (profile) {
+      return JSON.parse(profile).role
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return null
+}
+
 export default function SuperAdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const { loading, isAuthenticated, isSuperAdmin, user, refreshProfile } = useAuth()
+  const { loading, isAuthenticated, isSuperAdmin, user, refreshProfile, isInitialized } = useAuth()
   const [profileLoading, setProfileLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -31,12 +45,19 @@ export default function SuperAdminLayout({
   }, [loading, isAuthenticated, user.profile, refreshProfile])
 
   useEffect(() => {
-    if (!loading && !profileLoading && !isAuthenticated) {
+    // Don't redirect until auth is fully initialized
+    if (!isInitialized) return
+    
+    // Check both state and cached profile for role
+    const cachedRole = getCachedRole()
+    const isSuperAdminUser = isSuperAdmin || cachedRole === 'super_admin'
+    
+    if (!loading && !profileLoading && !isAuthenticated && !cachedRole) {
       router.push('/login')
-    } else if (!loading && !profileLoading && isAuthenticated && !isSuperAdmin) {
+    } else if (!loading && !profileLoading && isAuthenticated && !isSuperAdminUser) {
       router.push('/dashboard')
     }
-  }, [loading, profileLoading, isAuthenticated, isSuperAdmin, router])
+  }, [loading, profileLoading, isAuthenticated, isSuperAdmin, router, isInitialized])
 
   if (loading || profileLoading) {
     return (

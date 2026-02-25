@@ -37,6 +37,7 @@ const clearCachedProfile = () => {
 export function useAuth() {
   const [user, setUser] = useState<AuthUser>({ auth: null, profile: null })
   const [loading, setLoading] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
   
   // Initialize client only on client side
@@ -136,6 +137,7 @@ export function useAuth() {
           if (cachedProfile) {
             setUser({ auth: session.user, profile: cachedProfile })
             setLoading(false)
+            setIsInitialized(true)
             
             // Then fetch fresh profile in background
             fetchProfile(session.user.id).then(freshProfile => {
@@ -148,17 +150,20 @@ export function useAuth() {
             if (isMounted) {
               setUser({ auth: session.user, profile })
               setLoading(false)
+              setIsInitialized(true)
             }
           }
         } else {
           setUser({ auth: null, profile: null })
           setLoading(false)
+          setIsInitialized(true)
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
         if (isMounted) {
           setUser({ auth: null, profile: null })
           setLoading(false)
+          setIsInitialized(true)
         }
       }
     }
@@ -175,6 +180,7 @@ export function useAuth() {
           clearCachedProfile()
           setUser({ auth: null, profile: null })
           setLoading(false)
+          setIsInitialized(true)
           return
         }
         
@@ -341,6 +347,7 @@ export function useAuth() {
     isSuperAdmin: user.profile?.role === 'super_admin',
     isImporter: user.profile?.role === 'importer',
     isStaff: user.profile?.role === 'staff',
+    isInitialized,
     refreshProfile,
     signUp,
     signIn,

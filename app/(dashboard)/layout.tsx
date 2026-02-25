@@ -7,6 +7,20 @@ import { Header } from '@/components/layout/header'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { Loader2, Package } from 'lucide-react'
 
+// Helper to get cached role from sessionStorage
+const getCachedRole = (): string | null => {
+  if (typeof window === 'undefined') return null
+  try {
+    const profile = sessionStorage.getItem('userProfile')
+    if (profile) {
+      return JSON.parse(profile).role
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return null
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -14,34 +28,26 @@ export default function DashboardLayout({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const router = useRouter()
-  const { loading, isAuthenticated, isSuperAdmin, user } = useAuth()
+  const { loading, isAuthenticated, isSuperAdmin, user, isInitialized } = useAuth()
 
   // Redirect if not authenticated or if user is a super admin (they should go to /admin)
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    // Don't redirect until auth is fully initialized
+    if (!isInitialized) return
+    
+    // Check both state and cached profile for role
+    const cachedRole = getCachedRole()
+    const isSuperAdminUser = isSuperAdmin || cachedRole === 'super_admin'
+    
+    if (!loading && !isAuthenticated && !cachedRole) {
       router.push('/login')
     }
     
     // Prevent super admins from accessing importer dashboard - redirect to admin
-    if (!loading && isAuthenticated && isSuperAdmin) {
+    if (!loading && isAuthenticated && isSuperAdminUser) {
       router.push('/admin')
     }
-    
-    // Also check sessionStorage in case profile was just cached
-    if (!loading && isAuthenticated) {
-      try {
-        const storedProfile = sessionStorage.getItem('userProfile')
-        if (storedProfile) {
-          const profile = JSON.parse(storedProfile)
-          if (profile.role === 'super_admin') {
-            router.push('/admin')
-          }
-        }
-      } catch (e) {
-        // Ignore errors
-      }
-    }
-  }, [loading, isAuthenticated, isSuperAdmin, router])
+  }, [loading, isAuthenticated, isSuperAdmin, router, isInitialized])
 
   // Loading Screen
   if (loading) {
