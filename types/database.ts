@@ -553,12 +553,5 @@ export type UserWithImporter = User & {
   importer?: Importer | null
 }
 
-// Conversation with related data
-export type ConversationWithCustomer = Conversation & {
-  customer?: StoreCustomer | null
-}
-
-// Message with sender info
-export type MessageWithSender = Message & {
-  sender_name?: string
-}
+// Note: Conversation and Message types are exported from messaging.ts
+// via the export * from './messaging' statement above

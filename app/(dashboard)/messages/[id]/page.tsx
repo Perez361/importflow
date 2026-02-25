@@ -160,7 +160,7 @@ export default function ConversationPage() {
         .insert({
           conversation_id: conversation.id,
           sender_type: 'importer',
-          sender_id: user.user?.id,
+          sender_id: user.auth?.id,
           content: newMessage.trim(),
           image_url: imageUrl,
         })
