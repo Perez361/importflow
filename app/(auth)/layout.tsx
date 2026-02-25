@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Package } from 'lucide-react'
 
+// Force dynamic rendering to avoid prerender errors with Supabase
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'ImportFlow - Authentication',
   description: 'Sign in to your ImportFlow account',

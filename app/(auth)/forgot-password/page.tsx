@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/hooks/use-auth'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
           Forgot password
         </h2>
         <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Enter your email and we'll send you a reset link
+          Enter your email and we&apos;ll send you a reset link
         </p>
       </div>
 
@@ -127,5 +127,21 @@ export default function ForgotPasswordPage() {
         </Link>
       </div>
     </div>
+  )
+}
+
+function ForgotPasswordFallback() {
+  return (
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center min-h-[300px]">
+      <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+    </div>
+  )
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<ForgotPasswordFallback />}>
+      <ForgotPasswordForm />
+    </Suspense>
   )
 }
