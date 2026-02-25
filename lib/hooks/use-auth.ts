@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient, resetClient } from '@/lib/supabase/client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import type { User as AppUser } from '@/types/database'
 
@@ -37,12 +37,19 @@ const clearCachedProfile = () => {
 export function useAuth() {
   const [user, setUser] = useState<AuthUser>({ auth: null, profile: null })
   const [loading, setLoading] = useState(true)
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
   
-  // Get the singleton client
-  const supabase = createClient()
+  // Initialize client only on client side
+  useEffect(() => {
+    supabaseRef.current = createClient()
+  }, [])
+
+  // Get the singleton client (may be null on server)
+  const supabase = supabaseRef.current
 
   // Refresh user profile - useful when role changes in database
   const refreshProfile = useCallback(async () => {
+    if (!supabase) return null
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser()
       
@@ -70,6 +77,11 @@ export function useAuth() {
 
   // Initialize auth state - only once on mount
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+    
     let isMounted = true
     
     const fetchProfile = async (userId: string): Promise<AppUser | null> => {
@@ -203,6 +215,8 @@ export function useAuth() {
     password: string, 
     metadata?: { full_name?: string; business_name?: string }
   ) => {
+    if (!supabase) return { data: null, error: new Error('Supabase not initialized') }
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -217,6 +231,8 @@ export function useAuth() {
 
   // Sign in
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!supabase) return { data: null, error: new Error('Supabase not initialized') }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -227,6 +243,11 @@ export function useAuth() {
 
   // Sign out
   const signOut = useCallback(async () => {
+    if (!supabase) {
+      window.location.href = '/login'
+      return { error: null }
+    }
+    
     try {
       // Get the user's role before clearing (for redirect decision)
       let userRole = null
@@ -271,6 +292,8 @@ export function useAuth() {
 
   // Reset password
   const resetPassword = useCallback(async (email: string) => {
+    if (!supabase) return { data: null, error: new Error('Supabase not initialized') }
+    
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     })
@@ -280,6 +303,8 @@ export function useAuth() {
 
   // Update password
   const updatePassword = useCallback(async (newPassword: string) => {
+    if (!supabase) return { data: null, error: new Error('Supabase not initialized') }
+    
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword,
     })
@@ -289,7 +314,7 @@ export function useAuth() {
 
   // Update user profile
   const updateProfile = useCallback(async (updates: Partial<AppUser>) => {
-    if (!user.auth) {
+    if (!supabase || !user.auth) {
       return { data: null, error: new Error('Not authenticated') }
     }
 

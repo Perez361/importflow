@@ -3,15 +3,20 @@ import { createBrowserClient } from '@supabase/ssr'
 // Type for the Supabase browser client - inferred from createBrowserClient return type
 type SupabaseBrowserClient = ReturnType<typeof createBrowserClient>
 
-// Module-level client for caching
+// Module-level client for caching - only initialized in browser
 let cachedClient: SupabaseBrowserClient | null = null
 
 /**
  * Creates a new Supabase client.
  * Uses a simple singleton pattern for the browser client.
- * Returns null if environment variables are not available.
+ * Returns null if environment variables are not available or if called on server.
  */
 export function createClient(): SupabaseBrowserClient | null {
+  // Prevent client creation during SSR/build time
+  if (typeof window === 'undefined') {
+    return null
+  }
+
   // Check if environment variables are available
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
