@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -6,49 +7,81 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/dashboard'
 
-  // Handle PKCE flow (code parameter)
   if (code) {
-    try {
-      const supabase = await createClient()
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
-      
-      if (!error) {
-        return NextResponse.redirect(`${origin}${next}`)
+    const cookieStore = await cookies()
+    
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set({ name, value, ...options })
+          },
+          remove(name: string, options: any) {
+            cookieStore.delete({ name, ...options })
+          },
+        },
       }
+    )
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
+    if (!error) {
+      // Get the user to check their profile
+      const { data: { user } } = await supabase.auth.getUser()
       
-      console.error('Auth callback error:', error)
-    } catch (err) {
-      console.error('Auth callback exception:', err)
+      if (user) {
+        // Check if user has a profile in the users table
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role, is_active')
+          .eq('id', user.id)
+          .single()
+
+        if (profile) {
+          // Check if user is super_admin
+          if (profile.role === 'super_admin') {
+            return NextResponse.redirect(`${origin}/admin`)
+          }
+          
+          // Check if user is active
+          if (!profile.is_active) {
+            // Sign out and redirect to login with error
+            await supabase.auth.signOut()
+            return NextResponse.redirect(`${origin}/login?error=account_deactivated`)
+          }
+          
+          // Redirect to dashboard for regular users
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+
+        // No profile found - check if they're a store customer
+        const { data: customer } = await supabase
+          .from('store_customers')
+          .select('id')
+          .eq('auth_id', user.id)
+          .maybeSingle()
+
+        if (customer) {
+          // Store customer trying to access admin - sign out
+          await supabase.auth.signOut()
+          return NextResponse.redirect(`${origin}/login?error=store_customer`)
+        }
+
+        // No profile at all
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${origin}/login?error=no_profile`)
+      }
     }
+    
+    // If there's an error, redirect to login with error
+    return NextResponse.redirect(`${origin}/login?error=auth_failed`)
   }
 
-  // For implicit flow (access_token in URL hash), the client-side
-  // will handle the session. Redirect to a client page that processes the hash.
-  // The hash fragment is not sent to the server, so we redirect to a page
-  // that can handle it client-side.
-  const accessToken = searchParams.get('access_token')
-  const refreshToken = searchParams.get('refresh_token')
-  const type = searchParams.get('type')
-  const token = searchParams.get('token')
-  const errorParam = searchParams.get('error')
-  const errorDescription = searchParams.get('error_description')
-  
-  // Handle email confirmation with token
-  if (type === 'signup' || type === 'email' || token || accessToken) {
-    // Redirect to the confirm page which will handle the hash client-side
-    const confirmUrl = new URL('/auth/confirm', origin)
-    // Pass through any query params that might be needed
-    if (next) confirmUrl.searchParams.set('next', next)
-    if (type) confirmUrl.searchParams.set('type', type)
-    if (accessToken) confirmUrl.searchParams.set('access_token', accessToken)
-    if (refreshToken) confirmUrl.searchParams.set('refresh_token', refreshToken)
-    if (token) confirmUrl.searchParams.set('token', token)
-    return NextResponse.redirect(confirmUrl.toString())
-  }
-
-  // Return the user to an error page with instructions
-  const errorUrl = new URL('/auth/auth-code-error', origin)
-  if (errorParam) errorUrl.searchParams.set('error', errorParam)
-  if (errorDescription) errorUrl.searchParams.set('error_description', errorDescription)
-  return NextResponse.redirect(errorUrl.toString())
+  // No code provided, redirect to login
+  return NextResponse.redirect(`${origin}/login`)
 }
