@@ -1,17 +1,24 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/lib/hooks/use-auth'
+import { createClient } from '@/lib/supabase/client'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 
-function ForgotPasswordFormContent() {
+function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [clientReady, setClientReady] = useState(false)
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
   
-  const { resetPassword } = useAuth()
+  // Initialize supabase client on mount
+  useEffect(() => {
+    const client = createClient()
+    supabaseRef.current = client
+    setClientReady(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,10 +29,17 @@ function ForgotPasswordFormContent() {
       return
     }
 
+    if (!supabaseRef.current) {
+      setError('System not ready. Please try again.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const { error } = await resetPassword(email)
+      const { error } = await supabaseRef.current.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
       
       if (error) {
         setError(error.message)
@@ -37,6 +51,15 @@ function ForgotPasswordFormContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading while client initializes
+  if (!clientReady) {
+    return (
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center min-h-[300px]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
   }
 
   if (success) {
@@ -141,7 +164,7 @@ function ForgotPasswordFallback() {
 export default function ForgotPasswordPage() {
   return (
     <Suspense fallback={<ForgotPasswordFallback />}>
-      <ForgotPasswordFormContent />
+      <ForgotPasswordForm />
     </Suspense>
   )
 }
