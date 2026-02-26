@@ -89,7 +89,7 @@ export function Sidebar({ onClose, isMobileOpen }: SidebarProps) {
               <span className="text-lg font-bold text-foreground">
                 ImportFlow
               </span>
-              <span className="badge-primary text-xs">
+              <span className="badge-pro badge-pro-glow">
                 PRO
               </span>
             </Link>

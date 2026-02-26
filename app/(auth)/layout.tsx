@@ -30,7 +30,7 @@ export default function AuthLayout({
               <Package className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-bold text-foreground">ImportFlow</span>
-            <span className="badge-primary text-xs">PRO</span>
+            <span className="badge-pro badge-pro-glow">PRO</span>
           </Link>
         </div>
         
@@ -75,7 +75,7 @@ export default function AuthLayout({
                 <Package className="h-6 w-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-foreground">ImportFlow</span>
-              <span className="badge-primary text-xs">PRO</span>
+              <span className="badge-pro badge-pro-glow">PRO</span>
             </Link>
           </div>
           
