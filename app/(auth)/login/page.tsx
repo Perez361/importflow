@@ -142,7 +142,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="card p-8 shadow-soft-xl animate-scale-in">
+    <div className="glass-gradient p-8 rounded-2xl shadow-soft-xl animate-scale-in">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground">
           Welcome back
@@ -173,7 +173,7 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="input-with-icon"
+              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -226,7 +226,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="btn btn-primary w-full group"
+          className="btn btn-primary btn-lg w-full group shine-effect"
         >
           {loading ? (
             <>

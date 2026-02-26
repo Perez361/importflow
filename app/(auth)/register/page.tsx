@@ -121,7 +121,7 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="card p-8 shadow-soft-xl animate-scale-in">
+      <div className="glass-gradient p-8 rounded-2xl shadow-soft-xl animate-scale-in">
         <div className="text-center">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg">
             <CheckCircle className="h-8 w-8 text-white" />
@@ -152,7 +152,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="card p-8 shadow-soft-xl animate-scale-in">
+    <div className="glass-gradient p-8 rounded-2xl shadow-soft-xl animate-scale-in">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground">
           Create your account
@@ -184,7 +184,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="Your Import Business"
               required
-              className="input-with-icon"
+              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="John Doe"
               required
-              className="input-with-icon"
+              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -222,7 +222,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="you@example.com"
               required
-              className="input-with-icon"
+              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="••••••••"
               required
-              className="input-with-icon"
+              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
             />
           </div>
         </div>
@@ -290,7 +290,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="btn btn-primary w-full group"
+          className="btn btn-primary btn-lg w-full group shine-effect"
         >
           {loading ? (
             <>
