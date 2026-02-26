@@ -4,7 +4,7 @@ import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Loader2, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 
 // Google OAuth icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -142,30 +142,36 @@ function LoginForm() {
   }
 
   return (
-    <div className="glass-gradient p-8 rounded-2xl shadow-soft-xl animate-scale-in">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground">
-          Welcome back
-        </h2>
-        <p className="text-muted-foreground mt-2">
-          Sign in to your account to continue
-        </p>
-      </div>
+    <div className="max-w-md mx-auto">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white mb-6"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Home
+      </Link>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+            Welcome Back
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-2">
+            Sign in to your account to continue
+          </p>
+        </div>
+
         {error && (
-          <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm animate-fade-in">
-            <div className="w-2 h-2 rounded-full bg-destructive" />
+          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6">
             {error}
           </div>
         )}
 
-        <div className="form-group">
-          <label htmlFor="email" className="label">
-            Email address
-          </label>
-          <div className="relative">
-            <Mail className="input-icon" />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Email Address
+            </label>
             <input
               id="email"
               type="email"
@@ -173,106 +179,100 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        </div>
 
-        <div className="form-group">
-          <div className="flex items-center justify-between">
-            <label htmlFor="password" className="label">
-              Password
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+                className="w-full px-4 py-3 pr-12 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                Remember me for 30 days
+              </span>
             </label>
-            <Link
-              href="/forgot-password"
-              className="text-sm text-primary hover:text-primary/80 transition-colors"
-            >
-              Forgot password?
-            </Link>
           </div>
-          <div className="relative">
-            <Lock className="input-icon" />
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              className="input-with-icon pr-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
 
-        <div className="flex items-center">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded border-input text-primary focus:ring-ring focus:ring-offset-0"
-            />
-            <span className="text-sm text-muted-foreground">
-              Remember me for 30 days
-            </span>
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn btn-primary btn-lg w-full group shine-effect"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Signing in...
-            </>
-          ) : (
-            <>
-              Sign in
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </>
-          )}
-        </button>
-      </form>
-
-      {/* Google OAuth Button */}
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {googleLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-zinc-600" />
-          ) : (
-            <GoogleIcon className="h-5 w-5" />
-          )}
-          <span className="text-zinc-700 dark:text-zinc-200 font-medium">
-            Continue with Google
-          </span>
-        </button>
-      </div>
-
-      <div className="divider my-6" />
-
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link
-            href="/register"
-            className="text-primary hover:text-primary/80 font-medium transition-colors"
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            Sign up for free
-          </Link>
-        </p>
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+        </form>
+
+        {/* Google OAuth Button */}
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {googleLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-600" />
+            ) : (
+              <GoogleIcon className="h-5 w-5" />
+            )}
+            <span className="text-zinc-700 dark:text-zinc-200 font-medium">
+              Continue with Google
+            </span>
+          </button>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+            Don't have an account?{' '}
+            <Link
+              href="/register"
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+            >
+              Sign up for free
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
@@ -280,8 +280,18 @@ function LoginForm() {
 
 function LoginFallback() {
   return (
-    <div className="card p-8 flex items-center justify-center min-h-[400px]">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="max-w-md mx-auto">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2 mx-auto" />
+          <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4 mx-auto" />
+          <div className="space-y-4">
+            <div className="h-12 bg-zinc-200 dark:bg-zinc-700 rounded" />
+            <div className="h-12 bg-zinc-200 dark:bg-zinc-700 rounded" />
+            <div className="h-12 bg-zinc-200 dark:bg-zinc-700 rounded" />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

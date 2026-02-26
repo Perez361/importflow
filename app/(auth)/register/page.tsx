@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { TRIAL_PERIOD_DAYS } from '@/lib/constants'
-import { Loader2, Mail, Lock, Eye, EyeOff, Building2, User, ArrowRight, CheckCircle } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Building2, User, ArrowLeft, CheckCircle } from 'lucide-react'
 
 // Google OAuth icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -121,27 +121,35 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="glass-gradient p-8 rounded-2xl shadow-soft-xl animate-scale-in">
-        <div className="text-center">
+      <div className="max-w-md mx-auto">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white mb-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Link>
+
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8 text-center">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-6 shadow-lg">
             <CheckCircle className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
             Check your email
           </h2>
-          <p className="text-muted-foreground mb-6">
-            We've sent a confirmation link to <span className="font-medium text-foreground">{formData.email}</span>
+          <p className="text-zinc-500 dark:text-zinc-400 mb-6">
+            We've sent a confirmation link to <span className="font-medium text-zinc-700 dark:text-zinc-300">{formData.email}</span>
           </p>
-          <div className="p-4 rounded-xl bg-muted/50 border border-border mb-6">
-            <p className="text-sm text-muted-foreground">
+          <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 mb-6">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Click the link in the email to verify your account and start your {TRIAL_PERIOD_DAYS}-day free trial.
             </p>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Didn't receive the email? Check your spam folder or{' '}
             <button
               onClick={() => setSuccess(false)}
-              className="text-primary hover:text-primary/80 font-medium transition-colors"
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
             >
               try again
             </button>
@@ -152,30 +160,36 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="glass-gradient p-8 rounded-2xl shadow-soft-xl animate-scale-in">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground">
-          Create your account
-        </h2>
-        <p className="text-muted-foreground mt-2">
-          Start your {TRIAL_PERIOD_DAYS}-day free trial today
-        </p>
-      </div>
+    <div className="max-w-md mx-auto">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white mb-6"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Home
+      </Link>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+            Create your account
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-2">
+            Start your {TRIAL_PERIOD_DAYS}-day free trial today
+          </p>
+        </div>
+
         {error && (
-          <div className="flex items-center gap-2 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm animate-fade-in">
-            <div className="w-2 h-2 rounded-full bg-destructive" />
+          <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6">
             {error}
           </div>
         )}
 
-        <div className="form-group">
-          <label htmlFor="businessName" className="label">
-            Business name
-          </label>
-          <div className="relative">
-            <Building2 className="input-icon" />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="businessName" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Business Name
+            </label>
             <input
               id="businessName"
               name="businessName"
@@ -184,17 +198,14 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="Your Import Business"
               required
-              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="fullName" className="label">
-            Your name
-          </label>
-          <div className="relative">
-            <User className="input-icon" />
+          <div>
+            <label htmlFor="fullName" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Your Name
+            </label>
             <input
               id="fullName"
               name="fullName"
@@ -203,17 +214,14 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="John Doe"
               required
-              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="email" className="label">
-            Email address
-          </label>
-          <div className="relative">
-            <Mail className="input-icon" />
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Email Address
+            </label>
             <input
               id="email"
               name="email"
@@ -222,47 +230,43 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="you@example.com"
               required
-              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="password" className="label">
-            Password
-          </label>
-          <div className="relative">
-            <Lock className="input-icon" />
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              minLength={6}
-              className="input-with-icon pr-12"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                minLength={6}
+                className="w-full px-4 py-3 pr-12 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              Must be at least 6 characters
+            </p>
           </div>
-          <p className="form-hint">
-            Must be at least 6 characters
-          </p>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="confirmPassword" className="label">
-            Confirm password
-          </label>
-          <div className="relative">
-            <Lock className="input-icon" />
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              Confirm Password
+            </label>
             <input
               id="confirmPassword"
               name="confirmPassword"
@@ -271,72 +275,67 @@ export default function RegisterPage() {
               onChange={handleChange}
               placeholder="••••••••"
               required
-              className="input-with-icon bg-background/50 border-border/50 focus:border-primary/50 focus:ring-primary/20"
+              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        </div>
 
-        <div className="text-sm text-muted-foreground">
-          By signing up, you agree to our{' '}
-          <Link href="/terms" className="text-primary hover:text-primary/80 transition-colors">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="text-primary hover:text-primary/80 transition-colors">
-            Privacy Policy
-          </Link>
-        </div>
+          <div className="text-sm text-zinc-500 dark:text-zinc-400">
+            By signing up, you agree to our{' '}
+            <Link href="/terms" className="text-blue-600 hover:text-blue-700 dark:text-blue-400">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-blue-600 hover:text-blue-700 dark:text-blue-400">
+              Privacy Policy
+            </Link>
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn btn-primary btn-lg w-full group shine-effect"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              Creating account...
-            </>
-          ) : (
-            <>
-              Create account
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </>
-          )}
-        </button>
-      </form>
-
-      {/* Google OAuth Button */}
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={handleGoogleSignUp}
-          disabled={googleLoading}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {googleLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-zinc-600" />
-          ) : (
-            <GoogleIcon className="h-5 w-5" />
-          )}
-          <span className="text-zinc-700 dark:text-zinc-200 font-medium">
-            Continue with Google
-          </span>
-        </button>
-      </div>
-
-      <div className="divider my-6" />
-
-      <div className="text-center">
-        <p className="text-sm text-muted-foreground">
-          Already have an account?{' '}
-          <Link
-            href="/login"
-            className="text-primary hover:text-primary/80 font-medium transition-colors"
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            Sign in
-          </Link>
-        </p>
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              'Create Account'
+            )}
+          </button>
+        </form>
+
+        {/* Google OAuth Button */}
+        <div className="mt-6">
+          <button
+            type="button"
+            onClick={handleGoogleSignUp}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {googleLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-600" />
+            ) : (
+              <GoogleIcon className="h-5 w-5" />
+            )}
+            <span className="text-zinc-700 dark:text-zinc-200 font-medium">
+              Continue with Google
+            </span>
+          </button>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-700">
+          <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+            >
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   )
