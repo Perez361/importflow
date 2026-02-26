@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { TRIAL_PERIOD_DAYS } from '@/lib/constants'
-import { Loader2, Eye, EyeOff, Building2, User, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Building2, User, ArrowLeft, CheckCircle, Lock, Mail } from 'lucide-react'
 
 // Google OAuth icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -138,7 +138,7 @@ export default function RegisterPage() {
             Check your email
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 mb-6">
-            We've sent a confirmation link to <span className="font-medium text-zinc-700 dark:text-zinc-300">{formData.email}</span>
+            We&apos;ve sent a confirmation link to <span className="font-medium text-zinc-700 dark:text-zinc-300">{formData.email}</span>
           </p>
           <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 mb-6">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -146,7 +146,7 @@ export default function RegisterPage() {
             </p>
           </div>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Didn't receive the email? Check your spam folder or{' '}
+            Didn&apos;t receive the email? Check your spam folder or{' '}
             <button
               onClick={() => setSuccess(false)}
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
@@ -190,48 +190,63 @@ export default function RegisterPage() {
             <label htmlFor="businessName" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Business Name
             </label>
-            <input
-              id="businessName"
-              name="businessName"
-              type="text"
-              value={formData.businessName}
-              onChange={handleChange}
-              placeholder="Your Import Business"
-              required
-              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <input
+                id="businessName"
+                name="businessName"
+                type="text"
+                value={formData.businessName}
+                onChange={handleChange}
+                placeholder="Your Import Business"
+                required
+                className="w-full pl-11 pr-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Your Name
             </label>
-            <input
-              id="fullName"
-              name="fullName"
-              type="text"
-              value={formData.fullName}
-              onChange={handleChange}
-              placeholder="John Doe"
-              required
-              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <User className="h-5 w-5" />
+              </div>
+              <input
+                id="fullName"
+                name="fullName"
+                type="text"
+                value={formData.fullName}
+                onChange={handleChange}
+                placeholder="John Doe"
+                required
+                className="w-full pl-11 pr-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Email Address
             </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              required
-              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <Mail className="h-5 w-5" />
+              </div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="you@example.com"
+                required
+                className="w-full pl-11 pr-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <div>
@@ -239,6 +254,9 @@ export default function RegisterPage() {
               Password
             </label>
             <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <Lock className="h-5 w-5" />
+              </div>
               <input
                 id="password"
                 name="password"
@@ -248,7 +266,7 @@ export default function RegisterPage() {
                 placeholder="••••••••"
                 required
                 minLength={6}
-                className="w-full px-4 py-3 pr-12 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-11 pr-12 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="button"
@@ -267,16 +285,21 @@ export default function RegisterPage() {
             <label htmlFor="confirmPassword" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Confirm Password
             </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="••••••••"
-              required
-              className="w-full px-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
+                <Lock className="h-5 w-5" />
+              </div>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                className="w-full pl-11 pr-4 py-3 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <div className="text-sm text-zinc-500 dark:text-zinc-400">
