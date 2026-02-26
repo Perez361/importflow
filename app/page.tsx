@@ -116,26 +116,26 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
-        <div className="container">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+          <div className="flex items-center justify-between h-14 md:h-16">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center">
-                <Package className="h-5 w-5 text-white" />
+              <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center">
+                <Package className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-lg md:text-xl font-bold text-foreground">
                 ImportFlow
               </span>
-              <span className="badge-pro badge-pro-glow">
+              <span className="badge-pro badge-pro-glow text-xs">
                 PRO
               </span>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden lg:flex items-center gap-6">
               <Link href="#features" className="link-muted text-sm">
                 Features
               </Link>
@@ -148,7 +148,7 @@ export default function LandingPage() {
             </nav>
 
             {/* Desktop Auth Buttons */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
               <Link
                 href="/login"
                 className="btn btn-ghost btn-sm"
@@ -165,13 +165,14 @@ export default function LandingPage() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2"
+              className="lg:hidden p-1.5 -mr-1.5"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-foreground" />
+                <X className="h-5 w-5 md:h-6 md:w-6 text-foreground" />
               ) : (
-                <Menu className="h-6 w-6 text-foreground" />
+                <Menu className="h-5 w-5 md:h-6 md:w-6 text-foreground" />
               )}
             </button>
           </div>
@@ -179,42 +180,42 @@ export default function LandingPage() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-md">
-            <div className="container py-4 space-y-4">
-              <nav className="flex flex-col gap-4">
+          <div className="lg:hidden border-t border-border/50 bg-background/95 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 space-y-4">
+              <nav className="flex flex-col gap-2">
                 <Link 
                   href="#features" 
-                  className="link-muted text-sm py-2"
+                  className="link-muted text-sm py-2 px-2 rounded-lg hover:bg-muted"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Features
                 </Link>
                 <Link 
                   href="#pricing" 
-                  className="link-muted text-sm py-2"
+                  className="link-muted text-sm py-2 px-2 rounded-lg hover:bg-muted"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Pricing
                 </Link>
                 <Link 
                   href="#contact" 
-                  className="link-muted text-sm py-2"
+                  className="link-muted text-sm py-2 px-2 rounded-lg hover:bg-muted"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Contact
                 </Link>
               </nav>
-              <div className="flex flex-col gap-3 pt-4 border-t border-border/50">
+              <div className="flex flex-col gap-2 pt-3 border-t border-border/50">
                 <Link
                   href="/login"
-                  className="btn btn-ghost btn-md w-full"
+                  className="btn btn-ghost btn-md w-full justify-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Sign in
                 </Link>
                 <Link
                   href="/register"
-                  className="btn btn-primary btn-md w-full"
+                  className="btn btn-primary btn-md w-full justify-center"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Get Started
@@ -226,50 +227,55 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-24 md:pt-32 pb-16 md:pb-20 overflow-hidden">
-        {/* Enhanced Background Effects */}
+      <section className="relative pt-20 md:pt-28 lg:pt-32 pb-12 md:pb-16 lg:pb-20 overflow-hidden">
+        {/* Background Effects */}
         <div className="absolute inset-0 hero-gradient-bg" />
-        <div className="absolute top-1/4 left-1/4 w-48 md:w-96 h-48 md:h-96 bg-primary/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/4 right-1/4 w-48 md:w-96 h-48 md:h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow animation-delay-1000" />
+        <div className="absolute top-1/3 left-0 md:left-1/4 w-32 md:w-64 lg:w-96 h-32 md:h-64 lg:h-96 bg-primary/15 md:bg-primary/20 rounded-full blur-2xl md:blur-3xl" />
+        <div className="absolute bottom-1/3 right-0 md:right-1/4 w-32 md:w-64 lg:w-96 h-32 md:h-64 lg:h-96 bg-cyan-500/15 md:bg-cyan-500/20 rounded-full blur-2xl md:blur-3xl" />
         
-        <div className="container relative px-4 md:px-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 relative">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6 md:mb-8 animate-fade-in-down">
-              <Sparkles className="h-4 w-4 text-primary" />
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 md:py-2 rounded-full bg-primary/10 border border-primary/20 mb-5 md:mb-6 lg:mb-8">
+              <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
               <span className="text-xs md:text-sm font-medium text-primary">
                 Trusted by 500+ importers across Africa
               </span>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-foreground leading-tight animate-fade-in-up text-balance px-2">
+            {/* Headline */}
+            <h1 className="text-2.5xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground leading-[1.15] md:leading-tight mb-4 md:mb-6">
               Manage Your Importation Business
-              <span className="block text-gradient-primary mt-2 md:mt-4">
+              <span className="block text-gradient-primary mt-2 md:mt-3">
                 Like a Pro
               </span>
             </h1>
             
-            <p className="mt-4 md:mt-6 text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-up animation-delay-200 px-4">
+            {/* Subheadline */}
+            <p className="text-sm md:text-base lg:text-lg text-muted-foreground max-w-xl md:max-w-2xl mx-auto mb-6 md:mb-8 px-1 md:px-2">
               ImportFlow PRO helps importers in Ghana and across Africa manage products, 
               track shipments, process orders, and grow their business with powerful yet simple tools.
             </p>
             
-            <div className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 animate-fade-in-up animation-delay-300 px-4">
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 md:gap-3 lg:gap-4 mb-4 md:mb-6 px-2">
               <Link
                 href="/register"
-                className="btn btn-primary btn-lg md:btn-xl w-full sm:w-auto group shine-effect"
+                className="btn btn-primary btn-lg md:btn-xl w-full sm:w-auto max-w-xs justify-center group shine-effect"
               >
-                Start Free Trial
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <span>Start Free Trial</span>
+                <ArrowRight className="h-4 w-4 md:h-5 md:w-5 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="#features"
-                className="btn btn-outline btn-lg md:btn-xl w-full sm:w-auto"
+                className="btn btn-outline btn-lg md:btn-xl w-full sm:w-auto max-w-xs justify-center"
               >
                 Learn More
               </Link>
             </div>
             
-            <p className="mt-4 md:mt-6 text-sm text-muted-foreground animate-fade-in animation-delay-500">
+            {/* Trust badge */}
+            <p className="text-xs md:text-sm text-muted-foreground">
               14-day free trial • No credit card required
             </p>
           </div>
@@ -277,17 +283,17 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Bar */}
-      <section className="py-6 md:py-8 border-y border-border bg-muted/30 backdrop-blur-sm">
-        <div className="container px-4 md:px-0">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+      <section className="py-4 md:py-6 lg:py-8 border-y border-border bg-muted/30">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
             {benefits.map((benefit) => (
               <div key={benefit.title} className="flex items-center gap-2 md:gap-3">
                 <div className="p-1.5 md:p-2 rounded-lg bg-gradient-to-br from-primary/20 to-cyan-500/20 flex-shrink-0">
-                  <benefit.icon className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                  <benefit.icon className="h-3.5 w-3.5 md:h-4 md:w-4 lg:h-5 lg:w-5 text-primary" />
                 </div>
                 <div className="min-w-0">
                   <p className="font-medium text-foreground text-xs md:text-sm truncate">{benefit.title}</p>
-                  <p className="text-xs text-muted-foreground hidden sm:block">{benefit.description}</p>
+                  <p className="text-[10px] md:text-xs text-muted-foreground hidden sm:block">{benefit.description}</p>
                 </div>
               </div>
             ))}
@@ -296,35 +302,35 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="section bg-muted/30 relative overflow-hidden">
-        {/* Background decoration */}
+      <section id="features" className="py-10 md:py-14 lg:py-16 bg-muted/30 relative">
         <div className="absolute inset-0 bg-pattern-gradient" />
         
-        <div className="container px-4 md:px-0 relative">
-          <div className="text-center mb-10 md:mb-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 relative">
+          {/* Section Header */}
+          <div className="text-center mb-8 md:mb-12 lg:mb-14">
             <span className="badge badge-primary mb-3 md:mb-4">Features</span>
-            <h2 className="text-2xl md:text-3xl sm:text-4xl font-bold text-foreground text-balance px-2">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2 md:mb-3 px-2">
               Everything You Need to Succeed
             </h2>
-            <p className="mt-3 md:mt-4 text-sm md:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
+            <p className="text-sm md:text-base lg:text-lg text-muted-foreground max-w-xl md:max-w-2xl mx-auto">
               Powerful features designed specifically for importation businesses
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {/* Features Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 lg:gap-6">
             {features.map((feature, index) => (
               <div
                 key={feature.title}
-                className="card-gradient-hover p-4 md:p-6 group text-center sm:text-left"
-                style={{ animationDelay: `${index * 100}ms` }}
+                className="card-gradient-hover p-4 md:p-5 lg:p-6 group text-center sm:text-left"
               >
-                <div className={`w-10 md:w-12 h-10 md:h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 md:mb-4 shadow-lg group-hover:scale-110 transition-transform mx-auto sm:mx-0`}>
-                  <feature.icon className="h-5 md:h-6 w-5 md:w-6 text-white" />
+                <div className={`w-10 md:w-11 lg:w-12 h-10 md:h-11 lg:h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 md:mb-4 shadow-lg group-hover:scale-105 transition-transform mx-auto sm:mx-0`}>
+                  <feature.icon className="h-5 md:h-5 lg:h-6 w-5 md:w-5 lg:w-6 text-white" />
                 </div>
-                <h3 className="text-base md:text-lg font-semibold text-foreground">
+                <h3 className="text-sm md:text-base lg:text-lg font-semibold text-foreground mb-1.5 md:mb-2">
                   {feature.title}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -334,21 +340,23 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="section py-10 md:py-16 relative">
-        <div className="absolute inset-0 mesh-gradient-light opacity-50" />
+      <section className="py-10 md:py-14 lg:py-16 relative">
+        <div className="absolute inset-0 mesh-gradient-light opacity-30 md:opacity-50" />
         
-        <div className="container px-4 md:px-0 relative">
-          <div className="text-center mb-10 md:mb-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 relative">
+          {/* Section Header */}
+          <div className="text-center mb-8 md:mb-12 lg:mb-14">
             <span className="badge badge-primary mb-3 md:mb-4">How It Works</span>
-            <h2 className="text-2xl md:text-3xl sm:text-4xl font-bold text-foreground px-2">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2 md:mb-3">
               Get started in minutes
             </h2>
-            <p className="mt-3 md:mt-4 text-sm md:text-lg text-muted-foreground">
+            <p className="text-sm md:text-base lg:text-lg text-muted-foreground">
               Simple setup process to get you up and running quickly
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8 max-w-4xl mx-auto">
+          {/* Steps */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-4xl mx-auto">
             {[
               {
                 step: '1',
@@ -367,18 +375,21 @@ export default function LandingPage() {
               },
             ].map((item, index) => (
               <div key={item.step} className="relative text-center group flex flex-col items-center">
+                {/* Connector Line */}
                 {index < 2 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-primary/50 to-transparent" />
+                  <div className="hidden md:block absolute top-6 lg:top-8 left-[55%] lg:left-[60%] w-[45%] lg:w-[40%] h-px bg-gradient-to-r from-primary/40 to-transparent" />
                 )}
+                
                 <div className="relative inline-flex">
-                  <div className="w-12 md:w-16 h-12 md:h-16 rounded-2xl bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center text-white text-xl md:text-2xl font-bold shadow-lg group-hover:scale-110 transition-transform">
+                  <div className="w-11 md:w-12 lg:w-14 h-11 md:h-12 lg:h-14 rounded-xl lg:rounded-2xl bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center text-white text-lg md:text-xl lg:text-2xl font-bold shadow-lg group-hover:scale-105 transition-transform">
                     {item.step}
                   </div>
                 </div>
-                <h3 className="mt-4 md:mt-6 text-base md:text-lg font-semibold text-foreground">
+                
+                <h3 className="mt-4 md:mt-5 lg:mt-6 text-sm md:text-base lg:text-lg font-semibold text-foreground">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground max-w-[200px]">
+                <p className="mt-1.5 md:mt-2 text-xs md:text-sm text-muted-foreground max-w-[180px] md:max-w-none">
                   {item.description}
                 </p>
               </div>
@@ -388,46 +399,48 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="section bg-muted/30 relative overflow-hidden py-10 md:py-16">
+      <section id="pricing" className="py-10 md:py-14 lg:py-16 bg-muted/30 relative overflow-hidden">
         {/* Background decoration */}
-        <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-cyan-500/5 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-cyan-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
         
-        <div className="container px-4 md:px-0 relative">
-          <div className="text-center mb-10 md:mb-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 relative">
+          {/* Section Header */}
+          <div className="text-center mb-8 md:mb-12 lg:mb-14">
             <span className="badge badge-primary mb-3 md:mb-4">Pricing</span>
-            <h2 className="text-2xl md:text-3xl sm:text-4xl font-bold text-foreground px-2">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2 md:mb-3">
               Simple, Transparent Pricing
             </h2>
-            <p className="mt-3 md:mt-4 text-sm md:text-lg text-muted-foreground">
+            <p className="text-sm md:text-base lg:text-lg text-muted-foreground">
               Choose the plan that fits your business
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
+          {/* Pricing Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-5 lg:gap-6 max-w-6xl mx-auto">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`relative rounded-2xl p-4 md:p-8 transition-all duration-300 ${
+                className={`relative rounded-xl lg:rounded-2xl p-4 md:p-5 lg:p-6 xl:p-8 transition-all duration-300 flex flex-col ${
                   plan.highlighted
-                    ? 'bg-gradient-to-br from-primary via-blue-600 to-cyan-600 text-white shadow-xl scale-105 z-10'
+                    ? 'bg-gradient-to-br from-primary via-blue-600 to-cyan-600 text-white shadow-xl md:scale-105 z-10'
                     : 'card-gradient-hover'
                 }`}
               >
                 {plan.highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="badge bg-yellow-400 text-yellow-900 border-0 text-xs">
+                  <div className="absolute -top-2.5 md:-top-3 left-1/2 -translate-x-1/2">
+                    <span className="badge bg-yellow-400 text-yellow-900 border-0 text-[10px] md:text-xs">
                       Most Popular
                     </span>
                   </div>
                 )}
                 
-                <h3 className={`text-base md:text-lg font-semibold ${plan.highlighted ? 'text-white/90' : 'text-foreground'}`}>
+                <h3 className={`text-sm md:text-base lg:text-lg font-semibold ${plan.highlighted ? 'text-white/90' : 'text-foreground'}`}>
                   {plan.name}
                 </h3>
                 
-                <div className="mt-3 md:mt-4 flex items-baseline">
-                  <span className={`text-3xl md:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-foreground'}`}>
+                <div className="mt-2 md:mt-3 lg:mt-4 flex items-baseline">
+                  <span className={`text-2xl md:text-3xl lg:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-foreground'}`}>
                     {plan.price}
                   </span>
                   {plan.period && (
@@ -441,18 +454,18 @@ export default function LandingPage() {
                   {plan.description}
                 </p>
                 
-                <ul className="mt-4 md:mt-6 space-y-2 md:space-y-3">
+                <ul className="mt-3 md:mt-4 lg:mt-5 space-y-1.5 md:space-y-2 lg:space-y-3 flex-1">
                   {plan.features.slice(0, 4).map((feature) => (
                     <li key={feature} className="flex items-center gap-2">
-                      <CheckCircle className={`h-4 w-4 flex-shrink-0 ${plan.highlighted ? 'text-white/80' : 'text-primary'}`} />
-                      <span className={`text-xs md:text-sm ${plan.highlighted ? 'text-white' : 'text-muted-foreground'}`}>
+                      <CheckCircle className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 ${plan.highlighted ? 'text-white/80' : 'text-primary'}`} />
+                      <span className={`text-xs md:text-sm ${plan.highlighted ? 'text-white' : 'text-muted-foreground'} truncate`}>
                         {feature}
                       </span>
                     </li>
                   ))}
                   {plan.features.length > 4 && (
                     <li className="flex items-center gap-2">
-                      <CheckCircle className={`h-4 w-4 flex-shrink-0 ${plan.highlighted ? 'text-white/80' : 'text-primary'}`} />
+                      <CheckCircle className={`h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0 ${plan.highlighted ? 'text-white/80' : 'text-primary'}`} />
                       <span className={`text-xs md:text-sm ${plan.highlighted ? 'text-white/60' : 'text-muted-foreground'}`}>
                         +{plan.features.length - 4} more
                       </span>
@@ -462,7 +475,7 @@ export default function LandingPage() {
                 
                 <Link
                   href="/register"
-                  className={`mt-4 md:mt-8 w-full btn text-sm md:text-base ${
+                  className={`mt-4 md:mt-5 lg:mt-6 w-full btn text-sm md:text-base justify-center ${
                     plan.highlighted
                       ? 'bg-white text-primary hover:bg-white/90'
                       : 'btn-primary'
@@ -477,29 +490,29 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="section py-10 md:py-16">
-        <div className="container px-4 md:px-0">
-          <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-gradient-to-br from-primary via-blue-600 to-cyan-600 p-6 md:p-12 text-center text-white">
+      <section className="py-10 md:py-14 lg:py-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+          <div className="relative overflow-hidden rounded-xl lg:rounded-2xl xl:rounded-3xl bg-gradient-to-br from-primary via-blue-600 to-cyan-600 p-6 md:p-8 lg:p-10 xl:p-12 text-center text-white">
             {/* Background decoration */}
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
             
-            {/* Animated orbs - reduced on mobile */}
-            <div className="absolute top-0 left-1/4 w-32 md:w-64 h-32 md:h-64 bg-white/10 rounded-full blur-2xl md:blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 right-1/4 w-32 md:w-64 h-32 md:h-64 bg-white/10 rounded-full blur-2xl md:blur-3xl animate-pulse animation-delay-1000" />
+            {/* Animated orbs */}
+            <div className="absolute top-0 left-[10%] md:left-[20%] w-20 md:w-32 lg:w-40 h-20 md:h-32 lg:h-40 bg-white/10 rounded-full blur-xl md:blur-2xl lg:blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-[10%] md:right-[20%] w-20 md:w-32 lg:w-40 h-20 md:h-32 lg:h-40 bg-white/10 rounded-full blur-xl md:blur-2xl lg:blur-3xl animate-pulse animation-delay-1000" />
             
             <div className="relative">
-              <h2 className="text-xl md:text-3xl sm:text-4xl font-bold text-balance px-2">
+              <h2 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold mb-3 md:mb-4">
                 Ready to Transform Your Importation Business?
               </h2>
-              <p className="mt-3 md:mt-4 text-sm md:text-lg text-white/80 max-w-2xl mx-auto px-2">
+              <p className="text-sm md:text-base lg:text-lg text-white/80 max-w-lg mx-auto mb-5 md:mb-6 lg:mb-8">
                 Join hundreds of importers who are already using ImportFlow PRO to grow their business.
               </p>
               <Link
                 href="/register"
-                className="mt-6 md:mt-8 inline-flex items-center gap-2 px-6 md:px-8 py-3 md:py-4 bg-white text-primary font-semibold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl group shine-effect text-sm md:text-base"
+                className="inline-flex items-center gap-2 px-5 md:px-6 lg:px-8 py-2.5 md:py-3 lg:py-4 bg-white text-primary font-semibold rounded-lg lg:rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl group shine-effect text-sm md:text-base"
               >
-                Start Your Free Trial
-                <ArrowRight className="h-4 md:h-5 w-4 md:w-5 transition-transform group-hover:translate-x-1" />
+                <span>Start Your Free Trial</span>
+                <ArrowRight className="h-4 w-4 md:h-5 md:w-5 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
           </div>
@@ -508,54 +521,59 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border bg-muted/30">
-        <div className="container py-8 md:py-12 px-4 md:px-0">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
-            <div className="md:col-span-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-8 md:py-10 lg:py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {/* Brand Column */}
+            <div className="sm:col-span-2 lg:col-span-1 lg:row-span-2">
               <div className="flex items-center gap-2 mb-3 md:mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center">
-                  <Package className="h-5 w-5 text-white" />
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center">
+                  <Package className="h-4 w-4 md:h-5 md:w-5 text-white" />
                 </div>
-                <span className="text-xl font-bold text-foreground">
+                <span className="text-lg md:text-xl font-bold text-foreground">
                   ImportFlow
                 </span>
-                <span className="badge-pro badge-pro-glow">
+                <span className="badge-pro badge-pro-glow text-xs">
                   PRO
                 </span>
               </div>
-              <p className="text-muted-foreground text-sm max-w-sm">
+              <p className="text-muted-foreground text-xs md:text-sm max-w-[200px] sm:max-w-xs">
                 Empowering importers across Africa with powerful tools to manage their business efficiently.
               </p>
             </div>
             
+            {/* Product Links */}
             <div>
               <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Product</h4>
               <ul className="space-y-2">
-                <li><Link href="#features" className="link-muted text-sm">Features</Link></li>
-                <li><Link href="#pricing" className="link-muted text-sm">Pricing</Link></li>
-                <li><Link href="#" className="link-muted text-sm">Documentation</Link></li>
+                <li><Link href="#features" className="link-muted text-xs md:text-sm">Features</Link></li>
+                <li><Link href="#pricing" className="link-muted text-xs md:text-sm">Pricing</Link></li>
+                <li><Link href="#" className="link-muted text-xs md:text-sm">Documentation</Link></li>
               </ul>
             </div>
             
+            {/* Company Links */}
             <div>
               <h4 className="font-semibold text-foreground mb-3 md:mb-4 text-sm md:text-base">Company</h4>
               <ul className="space-y-2">
-                <li><Link href="/terms" className="link-muted text-sm">Terms</Link></li>
-                <li><Link href="/privacy" className="link-muted text-sm">Privacy</Link></li>
-                <li><Link href="/contact" className="link-muted text-sm">Contact</Link></li>
+                <li><Link href="/terms" className="link-muted text-xs md:text-sm">Terms</Link></li>
+                <li><Link href="/privacy" className="link-muted text-xs md:text-sm">Privacy</Link></li>
+                <li><Link href="/contact" className="link-muted text-xs md:text-sm">Contact</Link></li>
               </ul>
             </div>
           </div>
           
+          {/* Divider */}
           <div className="divider mt-6 md:mt-8" />
           
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4 pt-6 md:pt-8">
-            <p className="text-sm text-muted-foreground">
+          {/* Copyright */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 md:gap-4 pt-4 md:pt-6">
+            <p className="text-xs md:text-sm text-muted-foreground">
               © {new Date().getFullYear()} ImportFlow PRO. All rights reserved.
             </p>
-            <div className="flex items-center gap-4">
-              <Link href="/terms" className="link-muted text-sm">Terms</Link>
-              <Link href="/privacy" className="link-muted text-sm">Privacy</Link>
-              <Link href="/contact" className="link-muted text-sm">Contact</Link>
+            <div className="flex items-center gap-3 md:gap-4">
+              <Link href="/terms" className="link-muted text-xs md:text-sm">Terms</Link>
+              <Link href="/privacy" className="link-muted text-xs md:text-sm">Privacy</Link>
+              <Link href="/contact" className="link-muted text-xs md:text-sm">Contact</Link>
             </div>
           </div>
         </div>
@@ -563,4 +581,3 @@ export default function LandingPage() {
     </div>
   )
 }
-
