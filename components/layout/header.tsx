@@ -200,7 +200,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-[calc(100vw-32px)] sm:w-80 bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50 animate-scale-in">
+              <div className="absolute right-2 mt-2 w-[calc(100vw-16px)] sm:w-80 bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50 animate-scale-in">
                 <div className="px-4 py-2 border-b border-border flex items-center justify-between">
                   <h3 className="font-semibold text-foreground">
                     Notifications
@@ -330,3 +330,4 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
     </>
   )
 }
+

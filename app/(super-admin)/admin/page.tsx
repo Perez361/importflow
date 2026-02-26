@@ -349,8 +349,8 @@ export default function SuperAdminDashboard() {
                           <Building2 className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="font-medium">{importer.business_name}</p>
-                          <p className="text-sm text-muted-foreground">/{importer.slug}</p>
+                          <p className="font-medium truncate max-w-[120px] sm:max-w-none">{importer.business_name}</p>
+                          <p className="text-sm text-muted-foreground truncate max-w-[100px]">/{importer.slug}</p>
                         </div>
                       </div>
                     </td>
@@ -381,3 +381,4 @@ export default function SuperAdminDashboard() {
     </div>
   )
 }
+
