@@ -52,22 +52,18 @@ export default function SuperAdminDashboard() {
 
   useEffect(() => {
     async function loadStats() {
-      // Load importers
       const importersRes = await supabase.from('importers').select('*')
       const importers = importersRes.data as Importer[] | null
       
-      // Load subscriptions
       const subscriptionsRes = await supabase.from('subscriptions').select('*')
       const subscriptions = subscriptionsRes.data as Subscription[] | null
       
-      // Load counts
       const [usersRes, productsRes] = await Promise.all([
         supabase.from('users').select('id', { count: 'exact' }),
         supabase.from('products').select('id', { count: 'exact' })
       ])
       
       if (importers && subscriptions) {
-        // Calculate subscription stats
         let trialCount = 0
         let paidCount = 0
         let cancelledCount = 0
@@ -76,13 +72,11 @@ export default function SuperAdminDashboard() {
         const newPlanStats: PlanStats = { free: 0, starter: 0, pro: 0, enterprise: 0 }
         
         subscriptions.forEach(sub => {
-          // Count by plan
           if (sub.plan === 'free') newPlanStats.free++
           else if (sub.plan === 'starter') newPlanStats.starter++
           else if (sub.plan === 'pro') newPlanStats.pro++
           else if (sub.plan === 'enterprise') newPlanStats.enterprise++
           
-          // Count by status
           if (sub.status === 'active') {
             if (sub.plan === 'free') {
               trialCount++
@@ -95,7 +89,6 @@ export default function SuperAdminDashboard() {
           }
         })
         
-        // Count importers without subscriptions as trial
         const importersWithSubs = new Set(subscriptions.map(s => s.importer_id))
         importers.forEach(imp => {
           if (!importersWithSubs.has(imp.id) && imp.subscription_status === 'trial') {
@@ -118,7 +111,6 @@ export default function SuperAdminDashboard() {
           yearlyRevenue: monthlyRevenue * 12
         })
         
-        // Get recent importers (last 5)
         setRecentImporters(importers.slice(0, 5))
       }
       setLoading(false)
@@ -139,13 +131,13 @@ export default function SuperAdminDashboard() {
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-6">
-          <div className="p-3 rounded-xl bg-blue-100 mb-4">
-            <Building2 className="h-5 w-5 text-blue-600" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="card p-4 lg:p-6">
+          <div className="p-2 lg:p-3 rounded-xl bg-blue-100 mb-3 lg:mb-4">
+            <Building2 className="h-4 w-4 lg:h-5 lg:w-5 text-blue-600" />
           </div>
-          <p className="text-2xl font-bold">{loading ? '...' : stats.totalImporters}</p>
-          <p className="text-sm text-muted-foreground">Total Importers</p>
+          <p className="text-xl lg:text-2xl font-bold">{loading ? '...' : stats.totalImporters}</p>
+          <p className="text-xs lg:text-sm text-muted-foreground">Total Importers</p>
           <div className="flex gap-2 mt-2 text-xs">
             <span className="text-green-600">{stats.activeImporters} active</span>
             <span className="text-muted-foreground">•</span>
@@ -153,12 +145,12 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="card p-6">
-          <div className="p-3 rounded-xl bg-green-100 mb-4">
-            <TrendingUp className="h-5 w-5 text-green-600" />
+        <div className="card p-4 lg:p-6">
+          <div className="p-2 lg:p-3 rounded-xl bg-green-100 mb-3 lg:mb-4">
+            <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-green-600" />
           </div>
-          <p className="text-2xl font-bold">{loading ? '...' : stats.activeImporters}</p>
-          <p className="text-sm text-muted-foreground">Active Importers</p>
+          <p className="text-xl lg:text-2xl font-bold">{loading ? '...' : stats.activeImporters}</p>
+          <p className="text-xs lg:text-sm text-muted-foreground">Active Importers</p>
           <div className="mt-2 text-xs text-green-600">
             {stats.totalImporters > 0 
               ? `${Math.round((stats.activeImporters / stats.totalImporters) * 100)}% active rate`
@@ -166,42 +158,41 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="card p-6">
-          <div className="p-3 rounded-xl bg-purple-100 mb-4">
-            <Users className="h-5 w-5 text-purple-600" />
+        <div className="card p-4 lg:p-6">
+          <div className="p-2 lg:p-3 rounded-xl bg-purple-100 mb-3 lg:mb-4">
+            <Users className="h-4 w-4 lg:h-5 lg:w-5 text-purple-600" />
           </div>
-          <p className="text-2xl font-bold">{loading ? '...' : stats.totalUsers}</p>
-          <p className="text-sm text-muted-foreground">Total Users</p>
+          <p className="text-xl lg:text-2xl font-bold">{loading ? '...' : stats.totalUsers}</p>
+          <p className="text-xs lg:text-sm text-muted-foreground">Total Users</p>
         </div>
 
-        <div className="card p-6">
-          <div className="p-3 rounded-xl bg-orange-100 mb-4">
-            <Package className="h-5 w-5 text-orange-600" />
+        <div className="card p-4 lg:p-6">
+          <div className="p-2 lg:p-3 rounded-xl bg-orange-100 mb-3 lg:mb-4">
+            <Package className="h-4 w-4 lg:h-5 lg:w-5 text-orange-600" />
           </div>
-          <p className="text-2xl font-bold">{loading ? '...' : stats.totalProducts}</p>
-          <p className="text-sm text-muted-foreground">Total Products</p>
+          <p className="text-xl lg:text-2xl font-bold">{loading ? '...' : stats.totalProducts}</p>
+          <p className="text-xs lg:text-sm text-muted-foreground">Total Products</p>
         </div>
       </div>
 
       {/* Subscription Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Subscription Breakdown */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Subscription Breakdown</h3>
-            <CreditCard className="h-5 w-5 text-muted-foreground" />
+        <div className="card p-4 lg:p-6">
+          <div className="flex items-center justify-between mb-3 lg:mb-4">
+            <h3 className="font-semibold text-sm lg:text-base">Subscription Breakdown</h3>
+            <CreditCard className="h-4 w-5 lg:h-5 lg:w-5 text-muted-foreground" />
           </div>
           
           {loading ? (
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground text-sm">Loading...</p>
           ) : (
-            <div className="space-y-4">
-              {/* Plan Distribution */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-muted/50 rounded-lg">
+            <div className="space-y-3 lg:space-y-4">
+              <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                <div className="p-2 lg:p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Free/Trial</span>
-                    <span className="font-bold">{planStats.free}</span>
+                    <span className="text-xs lg:text-sm text-muted-foreground">Free/Trial</span>
+                    <span className="font-bold text-sm">{planStats.free}</span>
                   </div>
                   <div className="w-full bg-muted h-1.5 rounded-full mt-2">
                     <div 
@@ -211,10 +202,10 @@ export default function SuperAdminDashboard() {
                   </div>
                 </div>
                 
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="p-2 lg:p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Starter</span>
-                    <span className="font-bold">{planStats.starter}</span>
+                    <span className="text-xs lg:text-sm text-muted-foreground">Starter</span>
+                    <span className="font-bold text-sm">{planStats.starter}</span>
                   </div>
                   <div className="w-full bg-muted h-1.5 rounded-full mt-2">
                     <div 
@@ -224,10 +215,10 @@ export default function SuperAdminDashboard() {
                   </div>
                 </div>
                 
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="p-2 lg:p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Professional</span>
-                    <span className="font-bold">{planStats.pro}</span>
+                    <span className="text-xs lg:text-sm text-muted-foreground">Professional</span>
+                    <span className="font-bold text-sm">{planStats.pro}</span>
                   </div>
                   <div className="w-full bg-muted h-1.5 rounded-full mt-2">
                     <div 
@@ -237,10 +228,10 @@ export default function SuperAdminDashboard() {
                   </div>
                 </div>
                 
-                <div className="p-3 bg-muted/50 rounded-lg">
+                <div className="p-2 lg:p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Enterprise</span>
-                    <span className="font-bold">{planStats.enterprise}</span>
+                    <span className="text-xs lg:text-sm text-muted-foreground">Enterprise</span>
+                    <span className="font-bold text-sm">{planStats.enterprise}</span>
                   </div>
                   <div className="w-full bg-muted h-1.5 rounded-full mt-2">
                     <div 
@@ -251,19 +242,18 @@ export default function SuperAdminDashboard() {
                 </div>
               </div>
               
-              {/* Subscription Status */}
-              <div className="flex gap-4 pt-4 border-t border-border">
+              <div className="flex flex-wrap gap-3 lg:gap-4 pt-3 lg:pt-4 border-t border-border">
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="text-sm">{stats.paidImporters} Paid</span>
+                  <div className="w-2 lg:w-3 h-2 lg:h-3 rounded-full bg-green-500" />
+                  <span className="text-xs lg:text-sm">{stats.paidImporters} Paid</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                  <span className="text-sm">{stats.trialImporters} Trial</span>
+                  <div className="w-2 lg:w-3 h-2 lg:h-3 rounded-full bg-yellow-500" />
+                  <span className="text-xs lg:text-sm">{stats.trialImporters} Trial</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <span className="text-sm">{stats.cancelledImporters} Cancelled</span>
+                  <div className="w-2 lg:w-3 h-2 lg:h-3 rounded-full bg-red-500" />
+                  <span className="text-xs lg:text-sm">{stats.cancelledImporters} Cancelled</span>
                 </div>
               </div>
             </div>
@@ -271,36 +261,35 @@ export default function SuperAdminDashboard() {
         </div>
 
         {/* Revenue Stats */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Revenue Overview</h3>
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
+        <div className="card p-4 lg:p-6">
+          <div className="flex items-center justify-between mb-3 lg:mb-4">
+            <h3 className="font-semibold text-sm lg:text-base">Revenue Overview</h3>
+            <DollarSign className="h-4 w-5 lg:h-5 lg:w-5 text-muted-foreground" />
           </div>
           
           {loading ? (
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground text-sm">Loading...</p>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="space-y-3 lg:space-y-4">
+              <div className="flex items-center justify-between p-3 lg:p-4 bg-green-50 rounded-lg border border-green-200">
                 <div>
-                  <p className="text-sm text-green-700">Monthly Recurring Revenue</p>
-                  <p className="text-2xl font-bold text-green-700">${stats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-xs lg:text-sm text-green-700">Monthly Recurring Revenue</p>
+                  <p className="text-lg lg:text-2xl font-bold text-green-700">${stats.monthlyRevenue.toLocaleString()}</p>
                 </div>
-                <DollarSign className="h-8 w-8 text-green-600" />
+                <DollarSign className="h-6 lg:h-8 w-6 lg:w-8 text-green-600" />
               </div>
               
-              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+              <div className="flex items-center justify-between p-3 lg:p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <p className="text-sm text-muted-foreground">Yearly Projected Revenue</p>
-                  <p className="text-xl font-bold">${stats.yearlyRevenue.toLocaleString()}</p>
+                  <p className="text-xs lg:text-sm text-muted-foreground">Yearly Projected Revenue</p>
+                  <p className="text-lg lg:text-xl font-bold">${stats.yearlyRevenue.toLocaleString()}</p>
                 </div>
-                <TrendingUp className="h-6 w-6 text-muted-foreground" />
+                <TrendingUp className="h-5 lg:h-6 w-5 lg:w-6 text-muted-foreground" />
               </div>
               
-              {/* Average Revenue Per User */}
-              <div className="pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground mb-1">Average Revenue Per Paid Importer</p>
-                <p className="text-lg font-semibold">
+              <div className="pt-3 lg:pt-4 border-t border-border">
+                <p className="text-xs lg:text-sm text-muted-foreground mb-1">Average Revenue Per Paid Importer</p>
+                <p className="text-base lg:text-lg font-semibold">
                   ${stats.paidImporters > 0 
                     ? (stats.monthlyRevenue / stats.paidImporters).toFixed(2)
                     : '0.00'
@@ -312,55 +301,57 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Importers */}
+      {/* Recent Importers - Fully Responsive */}
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-border">
-          <h3 className="font-semibold">Recent Importers</h3>
+        <div className="p-3 lg:p-4 border-b border-border">
+          <h3 className="font-semibold text-sm lg:text-base">Recent Importers</h3>
         </div>
-        <div className="overflow-x-auto">
+        
+        {/* Desktop Table - Hidden on mobile */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-4 font-medium">Business</th>
-                <th className="text-left p-4 font-medium">Status</th>
-                <th className="text-left p-4 font-medium">Subscription</th>
-                <th className="text-left p-4 font-medium">Created</th>
+                <th className="text-left p-3 lg:p-4 font-medium text-sm">Business</th>
+                <th className="text-left p-3 lg:p-4 font-medium text-sm">Status</th>
+                <th className="text-left p-3 lg:p-4 font-medium text-sm">Subscription</th>
+                <th className="text-left p-3 lg:p-4 font-medium text-sm">Created</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={4} className="p-4 text-center text-muted-foreground text-sm">
                     Loading...
                   </td>
                 </tr>
               ) : recentImporters.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={4} className="p-4 text-center text-muted-foreground text-sm">
                     No importers yet
                   </td>
                 </tr>
               ) : (
                 recentImporters.map((importer) => (
                   <tr key={importer.id} className="border-b hover:bg-muted/50">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                          <Building2 className="h-5 w-5 text-muted-foreground" />
+                    <td className="p-3 lg:p-4">
+                      <div className="flex items-center gap-2 lg:gap-3">
+                        <div className="w-8 lg:w-10 h-8 lg:h-10 rounded-lg bg-muted flex items-center justify-center">
+                          <Building2 className="h-4 lg:h-5 w-4 lg:w-5 text-muted-foreground" />
                         </div>
                         <div>
-                          <p className="font-medium truncate max-w-[120px] sm:max-w-none">{importer.business_name}</p>
-                          <p className="text-sm text-muted-foreground truncate max-w-[100px]">/{importer.slug}</p>
+                          <p className="font-medium text-sm">{importer.business_name}</p>
+                          <p className="text-xs lg:text-sm text-muted-foreground">/{importer.slug}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
-                      <span className={`badge ${importer.is_active ? 'badge-success' : 'badge-danger'}`}>
+                    <td className="p-3 lg:p-4">
+                      <span className={`badge text-xs ${importer.is_active ? 'badge-success' : 'badge-danger'}`}>
                         {importer.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <span className={`badge ${
+                    <td className="p-3 lg:p-4">
+                      <span className={`badge text-xs ${
                         importer.subscription_status === 'active' ? 'badge-success' : 
                         importer.subscription_status === 'trial' ? 'badge-warning' : 
                         'badge-danger'
@@ -368,7 +359,7 @@ export default function SuperAdminDashboard() {
                         {importer.subscription_status}
                       </span>
                     </td>
-                    <td className="p-4 text-muted-foreground">
+                    <td className="p-3 lg:p-4 text-muted-foreground text-xs lg:text-sm">
                       {new Date(importer.created_at).toLocaleDateString()}
                     </td>
                   </tr>
@@ -377,8 +368,51 @@ export default function SuperAdminDashboard() {
             </tbody>
           </table>
         </div>
+        
+        {/* Mobile Card View - Visible only on mobile */}
+        <div className="md:hidden divide-y divide-border">
+          {loading ? (
+            <div className="p-4 text-center text-muted-foreground text-sm">
+              Loading...
+            </div>
+          ) : recentImporters.length === 0 ? (
+            <div className="p-4 text-center text-muted-foreground text-sm">
+              No importers yet
+            </div>
+          ) : (
+            recentImporters.map((importer) => (
+              <div key={importer.id} className="p-3 hover:bg-muted/30">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">{importer.business_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">/{importer.slug}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className={`badge text-[10px] ${importer.is_active ? 'badge-success' : 'badge-danger'}`}>
+                      {importer.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                    <span className={`badge text-[10px] ${
+                      importer.subscription_status === 'active' ? 'badge-success' : 
+                      importer.subscription_status === 'trial' ? 'badge-warning' : 
+                      'badge-danger'
+                    }`}>
+                      {importer.subscription_status}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Created: {new Date(importer.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   )
 }
-
