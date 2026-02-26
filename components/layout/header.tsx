@@ -1,4 +1,4 @@
-'use client'
+e 'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
@@ -37,12 +37,10 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
   const searchRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
-  // Fetch importer slug for store link and user avatar
   useEffect(() => {
     async function fetchData() {
       if (!user.profile?.id) return
 
-      // Fetch user avatar
       const { data: userData } = await supabase
         .from('users')
         .select('avatar_url')
@@ -53,7 +51,6 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
         setAvatarUrl(userData.avatar_url)
       }
 
-      // Fetch importer slug for store link
       if (user.profile?.importer_id) {
         const { data: importer } = await supabase
           .from('importers')
@@ -72,7 +69,6 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
     }
   }, [user.profile?.id, user.profile?.importer_id, supabase])
 
-  // Close menus when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -103,18 +99,13 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
     }
   }
 
-  // Get user display name
   const displayName = user.profile?.full_name || user.profile?.email?.split('@')[0] || 'User'
-
-  // Check if user is super admin
   const isSuperAdmin = user.profile?.role === 'super_admin'
 
   return (
     <>
       <header className="h-16 bg-card/80 backdrop-blur-lg border-b border-border flex items-center justify-between px-3 lg:px-6 sticky top-0 z-20">
-        {/* Left side */}
         <div className="flex items-center gap-2 lg:gap-4">
-          {/* Mobile menu button */}
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
@@ -123,7 +114,6 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             <Menu className="h-5 w-5" />
           </button>
 
-          {/* Desktop Search */}
           <div ref={searchRef} className="hidden md:block">
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -138,7 +128,6 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             </div>
           </div>
 
-          {/* Mobile Search Button */}
           <button
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
             className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
@@ -148,9 +137,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
           </button>
         </div>
 
-        {/* Right side */}
         <div className="flex items-center gap-1 lg:gap-2">
-          {/* Mobile Search Dropdown */}
           {isMobileSearchOpen && (
             <div className="absolute top-16 left-0 right-0 p-3 bg-card border-b border-border md:hidden animate-fade-in-down z-30">
               <div className="relative">
@@ -165,7 +152,6 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             </div>
           )}
 
-          {/* Storefront link - hide for super admins */}
           {showStoreLink && !isSuperAdmin && (
             storeSlug ? (
               <Link
@@ -188,7 +174,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             )
           )}
 
-          {/* Notifications */}
+          {/* Notifications - Fixed for mobile */}
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -200,7 +186,11 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-2 mt-2 w-[calc(100vw-16px)] sm:w-80 bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50 animate-scale-in">
+              <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setShowNotifications(false)} />
+            )}
+
+            {showNotifications && (
+              <div className="absolute right-0 md:right-auto md:left-1/2 md:-translate-x-1/2 mt-2 w-[calc(100vw-16px)] sm:w-80 max-w-[360px] bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50 animate-scale-in">
                 <div className="px-4 py-2 border-b border-border flex items-center justify-between">
                   <h3 className="font-semibold text-foreground">
                     Notifications
@@ -330,4 +320,3 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
     </>
   )
 }
-
