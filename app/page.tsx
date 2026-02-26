@@ -518,7 +518,7 @@ export default function LandingPage() {
                 <span className="text-xl font-bold text-foreground">
                   ImportFlow
                 </span>
-                <span className="badge-primary text-xs">
+                <span className="badge-pro badge-pro-glow">
                   PRO
                 </span>
               </div>
@@ -563,3 +563,4 @@ export default function LandingPage() {
     </div>
   )
 }
+
