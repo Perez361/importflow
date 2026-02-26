@@ -94,34 +94,35 @@ export default function MessagesPage() {
   if (!user.auth) return null
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <MessageSquare className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold">Messages</h1>
+    <div className="space-y-4 md:space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-0">
+        <div className="flex items-center gap-2 md:gap-3">
+          <MessageSquare className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+          <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Filters - Mobile responsive */}
+      <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input pl-10"
+            className="input pl-9 md:pl-10 text-sm md:text-base py-2"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="input w-auto"
+            className="input w-auto text-sm md:text-base py-2"
           >
-            <option value="all">All Status</option>
+            <option value="all">All</option>
             <option value="open">Open</option>
             <option value="closed">Closed</option>
           </select>
@@ -134,33 +135,34 @@ export default function MessagesPage() {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : filteredConversations.length === 0 ? (
-        <div className="text-center py-12">
-          <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No conversations yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
+        <div className="text-center py-10 md:py-12">
+          <MessageSquare className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3 md:mb-4" />
+          <p className="text-muted-foreground text-sm md:text-base">No conversations yet</p>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1">
             Customers will send you product sourcing requests here
           </p>
         </div>
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden -mx-4 md:mx-0">
           <div className="divide-y divide-border">
             {filteredConversations.map((conversation) => (
               <Link
                 key={conversation.id}
                 href={`/messages/${conversation.id}`}
-                className="block p-4 hover:bg-muted/50 transition-colors"
+                className="block p-3 md:p-4 hover:bg-muted/50 transition-colors"
               >
-                <div className="flex items-start gap-4">
+                {/* Mobile card layout */}
+                <div className="flex items-start gap-3 md:gap-4">
                   {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     {conversation.customer?.avatar_url ? (
                       <img
                         src={conversation.customer.avatar_url}
                         alt={conversation.customer.name}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
                       />
                     ) : (
-                      <span className="text-lg font-semibold text-primary">
+                      <span className="text-sm md:text-lg font-semibold text-primary">
                         {conversation.customer?.name?.charAt(0).toUpperCase() || '?'}
                       </span>
                     )}
@@ -169,24 +171,24 @@ export default function MessagesPage() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-semibold truncate">
+                      <h3 className="font-semibold text-sm md:text-base truncate">
                         {conversation.subject}
                       </h3>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
                         {formatDate(conversation.last_message_at)}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-xs md:text-sm text-muted-foreground truncate">
                       {conversation.customer?.name || 'Unknown Customer'}
                     </p>
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-[10px] md:text-xs text-muted-foreground truncate hidden md:block">
                       {conversation.customer?.email}
                     </p>
                   </div>
 
                   {/* Status Badge */}
                   <div className="flex-shrink-0">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={`inline-flex items-center px-1.5 md:px-2 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-medium ${
                       conversation.status === 'open'
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
                         : 'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400'

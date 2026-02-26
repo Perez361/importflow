@@ -104,11 +104,11 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
 
   return (
     <>
-      <header className="h-16 bg-card/80 backdrop-blur-lg border-b border-border flex items-center justify-between px-3 lg:px-6 sticky top-0 z-20">
-        <div className="flex items-center gap-2 lg:gap-4">
+      <header className="h-14 md:h-16 bg-card/80 backdrop-blur-lg border-b border-border flex items-center justify-between px-2 md:px-3 lg:px-6 sticky top-0 z-20">
+        <div className="flex items-center gap-1 md:gap-2 lg:gap-4">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
+            className="lg:hidden p-1.5 md:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -120,7 +120,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
               <input
                 type="text"
                 placeholder="Search products, orders..."
-                className="w-48 lg:w-72 pl-10 pr-4 py-2 bg-muted/50 border border-transparent rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:bg-background transition-all"
+                className="w-40 lg:w-72 pl-10 pr-4 py-1.5 lg:py-2 bg-muted/50 border border-transparent rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:bg-background transition-all"
               />
               <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
                 ⌘K
@@ -130,22 +130,22 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
 
           <button
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
+            className="md:hidden p-1.5 md:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
             aria-label="Toggle search"
           >
             {isMobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
           </button>
         </div>
 
-        <div className="flex items-center gap-1 lg:gap-2">
+        <div className="flex items-center gap-0.5 md:gap-1 lg:gap-2">
           {isMobileSearchOpen && (
-            <div className="absolute top-16 left-0 right-0 p-3 bg-card border-b border-border md:hidden animate-fade-in-down z-30">
+            <div className="absolute top-14 md:top-16 left-0 right-0 p-2 md:p-3 bg-card border-b border-border md:hidden animate-fade-in-down z-30">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search products, orders..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                  className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
                   autoFocus
                 />
               </div>
@@ -157,7 +157,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
               <Link
                 href={`/store/${storeSlug}`}
                 target="_blank"
-                className="hidden sm:flex items-center gap-2 px-2 lg:px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors group touch-manipulation"
+                className="hidden sm:flex items-center gap-1.5 md:gap-2 px-2 lg:px-3 py-1.5 md:py-2 text-xs md:text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors group touch-manipulation"
               >
                 <Store className="h-4 w-4" />
                 <span className="hidden md:inline">View Store</span>
@@ -166,7 +166,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             ) : (
               <Link
                 href="/storefront"
-                className="hidden sm:flex items-center gap-2 px-2 lg:px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors touch-manipulation"
+                className="hidden sm:flex items-center gap-1.5 md:gap-2 px-2 lg:px-3 py-1.5 md:py-2 text-xs md:text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors touch-manipulation"
               >
                 <Store className="h-4 w-4" />
                 <span className="hidden md:inline">View Store</span>
@@ -178,11 +178,11 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
+              className="relative p-1.5 md:p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors touch-manipulation"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full ring-2 ring-card" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full ring-2 ring-card" />
             </button>
 
             {showNotifications && (
@@ -190,55 +190,59 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
             )}
 
             {showNotifications && (
-              <div className="absolute right-0 md:right-auto md:left-1/2 md:-translate-x-1/2 mt-2 w-[calc(100vw-16px)] sm:w-80 max-w-[360px] bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50 animate-scale-in">
-                <div className="px-4 py-2 border-b border-border flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">
+              <div className="absolute right-1 md:right-auto md:left-1/2 md:-translate-x-1/2 top-full mt-1 md:mt-2 w-[calc(100vw-8px)] sm:w-72 md:w-80 max-w-[340px] bg-card rounded-lg md:rounded-xl shadow-soft-lg border border-border py-1 md:py-2 z-50 animate-scale-in overflow-hidden">
+                <div className="px-3 md:px-4 py-2 border-b border-border flex items-center justify-between">
+                  <h3 className="font-semibold text-sm md:text-base text-foreground">
                     Notifications
                   </h3>
-                  <span className="badge badge-primary text-xs">2 new</span>
+                  <span className="badge badge-primary text-[10px] md:text-xs">2 new</span>
                 </div>
-                <div className="max-h-64 overflow-y-auto scrollbar-thin">
-                  <div className="px-4 py-3 hover:bg-muted cursor-pointer transition-colors">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                        <span className="text-green-600 dark:text-green-400 text-sm">🛒</span>
+                <div className="max-h-48 md:max-h-64 overflow-y-auto scrollbar-thin">
+                  <div className="px-3 md:px-4 py-2.5 md:py-3 hover:bg-muted cursor-pointer transition-colors">
+                    <div className="flex items-start gap-2.5 md:gap-3">
+                      <div className="w-7 md:w-8 h-7 md:h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm">🛒</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-foreground font-medium">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs md:text-sm text-foreground font-medium truncate">
                           New order received
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 truncate">
                           Order #ORD-001 from John Doe
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-[10px] text-muted-foreground mt-0.5 hidden md:block">
                           2 minutes ago
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="px-4 py-3 hover:bg-muted cursor-pointer transition-colors">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
-                        <span className="text-yellow-600 dark:text-yellow-400 text-sm">⚠️</span>
+                  <div className="px-3 md:px-4 py-2.5 md:py-3 hover:bg-muted cursor-pointer transition-colors">
+                    <div className="flex items-start gap-2.5 md:gap-3">
+                      <div className="w-7 md:w-8 h-7 md:h-8 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm">⚠️</span>
                       </div>
-                      <div>
-                        <p className="text-sm text-foreground font-medium">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs md:text-sm text-foreground font-medium truncate">
                           Low stock alert
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5 truncate">
                           Product A is running low (3 left)
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-[10px] text-muted-foreground mt-0.5 hidden md:block">
                           1 hour ago
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="px-4 py-2 border-t border-border">
-                  <button className="text-sm text-primary hover:text-primary/80 font-medium transition-colors">
+                <div className="px-3 md:px-4 py-2 border-t border-border">
+                  <Link 
+                    href="/messages" 
+                    className="text-xs md:text-sm text-primary hover:text-primary/80 font-medium transition-colors block text-center"
+                    onClick={() => setShowNotifications(false)}
+                  >
                     View all notifications
-                  </button>
+                  </Link>
                 </div>
               </div>
             )}
@@ -248,38 +252,38 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
           <div className="relative" ref={menuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-muted transition-colors touch-manipulation"
+              className="flex items-center gap-1.5 md:gap-2 p-1 rounded-lg md:rounded-xl hover:bg-muted transition-colors touch-manipulation"
               aria-label="User menu"
             >
               {avatarUrl ? (
                 <img 
                   src={avatarUrl} 
                   alt="Profile" 
-                  className="w-8 h-8 rounded-lg object-cover"
+                  className="w-7 h-7 md:w-8 md:h-8 rounded-lg object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center text-white text-sm font-semibold shadow-sm">
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center text-white text-xs md:text-sm font-semibold shadow-sm">
                   {user.profile?.full_name ? getInitials(user.profile.full_name) : 'U'}
                 </div>
               )}
               <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-foreground">
-                  {displayName}
+                <p className="text-xs md:text-sm font-medium text-foreground leading-tight">
+                  {displayName.length > 12 ? displayName.slice(0, 12) + '...' : displayName}
                 </p>
-                <p className="text-xs text-muted-foreground capitalize">
+                <p className="text-[10px] md:text-xs text-muted-foreground capitalize">
                   {user.profile?.role || 'user'}
                 </p>
               </div>
-              <ChevronDown className="hidden sm:block h-4 w-4 text-muted-foreground" />
+              <ChevronDown className="hidden sm:block h-3 md:h-4 w-3 md:w-4 text-muted-foreground" />
             </button>
 
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-[calc(100vw-32px)] sm:w-56 bg-card rounded-xl shadow-soft-lg border border-border py-2 z-50 animate-scale-in">
-                <div className="px-4 py-3 border-b border-border">
-                  <p className="text-sm font-medium text-foreground truncate">
+              <div className="absolute right-0 mt-1 md:mt-2 w-[calc(100vw-16px)] sm:w-56 bg-card rounded-xl shadow-soft-lg border border-border py-1.5 md:py-2 z-50 animate-scale-in overflow-hidden">
+                <div className="px-3 md:px-4 py-2.5 md:py-3 border-b border-border">
+                  <p className="text-xs md:text-sm font-medium text-foreground truncate">
                     {displayName}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-[10px] md:text-xs text-muted-foreground truncate">
                     {user.profile?.email}
                   </p>
                 </div>
@@ -287,7 +291,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
                 <div className="py-1">
                   <Link
                     href="/settings/profile"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2 text-xs md:text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >
                     <User className="h-4 w-4" />
@@ -295,7 +299,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
                   </Link>
                   <Link
                     href="/settings"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2 text-xs md:text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     onClick={() => setShowUserMenu(false)}
                   >
                     <Settings className="h-4 w-4" />
@@ -306,7 +310,7 @@ export function Header({ onMenuClick, showStoreLink = true }: HeaderProps) {
                 <div className="border-t border-border pt-1">
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 w-full transition-colors"
+                    className="flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2 text-xs md:text-sm text-destructive hover:bg-destructive/10 w-full transition-colors"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign out
