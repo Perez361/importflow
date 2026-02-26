@@ -48,8 +48,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-background text-foreground min-h-screen relative`}
       >
+        {/* Global gradient background */}
+        <div className="fixed inset-0 mesh-gradient-light dark:mesh-gradient-dark -z-10" />
+        
+        {/* Gradient orbs for ambient effect */}
+        <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
+          <div className="gradient-orb gradient-orb-1 top-[10%] left-[5%]" />
+          <div className="gradient-orb gradient-orb-2 top-[40%] right-[10%]" />
+          <div className="gradient-orb gradient-orb-3 bottom-[20%] left-[20%]" />
+        </div>
+        
         {children}
       </body>
     </html>

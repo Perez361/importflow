@@ -156,10 +156,11 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 hero-gradient" />
+        {/* Enhanced Background Effects */}
+        <div className="absolute inset-0 hero-gradient-bg" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse-slow" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-slow animation-delay-1000" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-3xl" />
         
         <div className="container relative">
           <div className="max-w-4xl mx-auto text-center">
@@ -172,7 +173,7 @@ export default function LandingPage() {
             
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-foreground leading-tight animate-fade-in-up text-balance">
               Manage Your Importation Business
-              <span className="block text-gradient mt-2">
+              <span className="block text-gradient-primary mt-2">
                 Like a Pro
               </span>
             </h1>
@@ -185,7 +186,7 @@ export default function LandingPage() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up animation-delay-300">
               <Link
                 href="/register"
-                className="btn btn-primary btn-xl w-full sm:w-auto group"
+                className="btn btn-primary btn-xl w-full sm:w-auto group shine-effect"
               >
                 Start Free Trial
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -206,12 +207,12 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Bar */}
-      <section className="py-8 border-y border-border bg-muted/30">
+      <section className="py-8 border-y border-border bg-muted/30 backdrop-blur-sm">
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {benefits.map((benefit) => (
               <div key={benefit.title} className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-cyan-500/20">
                   <benefit.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div>
@@ -225,8 +226,11 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="section bg-muted/30">
-        <div className="container">
+      <section id="features" className="section bg-muted/30 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-pattern-gradient" />
+        
+        <div className="container relative">
           <div className="text-center mb-16">
             <span className="badge badge-primary mb-4">Features</span>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground text-balance">
@@ -241,7 +245,7 @@ export default function LandingPage() {
             {features.map((feature, index) => (
               <div
                 key={feature.title}
-                className="card-interactive p-6 group"
+                className="card-gradient-hover p-6 group"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
@@ -260,8 +264,10 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="section">
-        <div className="container">
+      <section className="section relative">
+        <div className="absolute inset-0 mesh-gradient-light opacity-50" />
+        
+        <div className="container relative">
           <div className="text-center mb-16">
             <span className="badge badge-primary mb-4">How It Works</span>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
@@ -315,8 +321,12 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="section bg-muted/30">
-        <div className="container">
+      <section id="pricing" className="section bg-muted/30 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-gradient-to-br from-primary/5 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tl from-cyan-500/5 to-transparent rounded-full blur-3xl" />
+        
+        <div className="container relative">
           <div className="text-center mb-16">
             <span className="badge badge-primary mb-4">Pricing</span>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
@@ -333,8 +343,8 @@ export default function LandingPage() {
                 key={plan.name}
                 className={`relative rounded-2xl p-8 transition-all duration-300 ${
                   plan.highlighted
-                    ? 'bg-gradient-to-br from-primary to-blue-600 text-white shadow-xl scale-105 z-10'
-                    : 'card-hover'
+                    ? 'bg-gradient-to-br from-primary via-blue-600 to-cyan-600 text-white shadow-xl scale-105 z-10'
+                    : 'card-gradient-hover'
                 }`}
               >
                 {plan.highlighted && (
@@ -398,6 +408,10 @@ export default function LandingPage() {
             {/* Background decoration */}
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
             
+            {/* Animated orbs */}
+            <div className="absolute top-0 left-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse animation-delay-1000" />
+            
             <div className="relative">
               <h2 className="text-3xl sm:text-4xl font-bold text-balance">
                 Ready to Transform Your Importation Business?
@@ -407,7 +421,7 @@ export default function LandingPage() {
               </p>
               <Link
                 href="/register"
-                className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-white text-primary font-semibold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl group"
+                className="mt-8 inline-flex items-center gap-2 px-8 py-4 bg-white text-primary font-semibold rounded-xl hover:bg-white/90 transition-all shadow-lg hover:shadow-xl group shine-effect"
               >
                 Start Your Free Trial
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
