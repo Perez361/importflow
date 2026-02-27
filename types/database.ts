@@ -208,6 +208,8 @@ export interface Database {
           quantity: number
           low_stock_threshold: number
           is_available: boolean
+          supplier_tracking_number: string | null
+          is_preorder: boolean
           created_at: string
           updated_at: string
         }
@@ -224,6 +226,8 @@ export interface Database {
           quantity?: number
           low_stock_threshold?: number
           is_available?: boolean
+          supplier_tracking_number?: string | null
+          is_preorder?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -240,6 +244,8 @@ export interface Database {
           quantity?: number
           low_stock_threshold?: number
           is_available?: boolean
+          supplier_tracking_number?: string | null
+          is_preorder?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -294,6 +300,9 @@ export interface Database {
           quantity: number
           unit_price: number
           total_price: number
+          payment_status: string
+          paid_amount: number
+          payment_notes: string | null
           created_at: string
         }
         Insert: {
@@ -304,6 +313,9 @@ export interface Database {
           quantity: number
           unit_price: number
           total_price: number
+          payment_status?: string
+          paid_amount?: number
+          payment_notes?: string | null
           created_at?: string
         }
         Update: {
@@ -314,6 +326,9 @@ export interface Database {
           quantity?: number
           unit_price?: number
           total_price?: number
+          payment_status?: string
+          paid_amount?: number
+          payment_notes?: string | null
           created_at?: string
         }
       }
@@ -535,6 +550,19 @@ export type PaymentUpdate = Database['public']['Tables']['payments']['Update']
 export type Subscription = Database['public']['Tables']['subscriptions']['Row']
 export type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert']
 export type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update']
+
+// Preorder Tracking Table
+export type PreorderTracking = {
+  id: string
+  importer_id: string
+  shipment_id: string | null
+  tracking_number: string
+  product_id: string | null
+  verified: boolean
+  verified_at: string | null
+  notes: string | null
+  created_at: string
+}
 
 // Messaging System Types - See types/messaging.ts
 export * from './messaging'

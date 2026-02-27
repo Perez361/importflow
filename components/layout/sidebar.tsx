@@ -18,6 +18,7 @@ import {
   Sparkles,
   X,
   MessageSquare,
+  ClipboardList,
 } from 'lucide-react'
 import { useState, useCallback, useEffect } from 'react'
 
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Products', href: '/products', icon: Package },
   { name: 'Orders', href: '/orders', icon: ShoppingCart },
+  { name: 'Buyer Tracking', href: '/buyer-tracking', icon: ClipboardList },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Messages', href: '/messages', icon: MessageSquare },
   { name: 'Shipments', href: '/shipments', icon: Truck },
