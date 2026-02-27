@@ -1,8 +1,8 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
+
 
 import {
   Package,
@@ -17,6 +17,7 @@ import {
   Menu,
   X,
 } from 'lucide-react'
+import { OAuthHandler } from '@/components/auth/OAuthHandler'
 
 const CediIcon = ({ className }: { className?: string }) => {
   return (
@@ -115,22 +116,23 @@ const benefits = [
 ]
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const searchParams = useSearchParams()
-  const router = useRouter()
+  return (
+    <>
+      <Suspense fallback={null}>
+        <OAuthHandler />
+      </Suspense>
+      
+      <LandingContent />
+    </>
+  )
+}
 
-  // Handle OAuth callback redirect
-  useEffect(() => {
-    const code = searchParams.get('code')
-    if (code) {
-      // Redirect to auth callback with all query params
-      const callbackUrl = `/auth/callback${window.location.search}`
-      router.replace(callbackUrl)
-    }
-  }, [searchParams, router])
+// Separate component for the landing page content
+function LandingContent() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
 
   return (
-
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
