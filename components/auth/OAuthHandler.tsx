@@ -3,6 +3,20 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
+// Cookie helper functions
+function setCookie(name: string, value: string, maxAge: number = 300) {
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`
+}
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+  return match ? decodeURIComponent(match[2]) : null
+}
+
+function deleteCookie(name: string) {
+  document.cookie = `${name}=; path=/; max-age=0`
+}
+
 export function OAuthHandler() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -16,20 +30,23 @@ export function OAuthHandler() {
     if (code && !isRedirecting) {
       setIsRedirecting(true)
       
-      // Get slug from URL or sessionStorage
+      // Get slug from URL or cookie
       let slug = searchParams.get('slug')
       
-      // If no slug in URL, try to get from sessionStorage
+      // If no slug in URL, try to get from cookie
       if (!slug) {
-        slug = sessionStorage.getItem('oauth_slug')
-        console.log('Retrieved slug from sessionStorage:', slug)
+        slug = getCookie('oauth_slug')
+        console.log('Retrieved slug from cookie:', slug)
       }
+      
+      // Clean up the cookie
+      deleteCookie('oauth_slug')
       
       // Build the full query string preserving all params
       const queryString = window.location.search
       const hash = window.location.hash
       
-      // If we have a slug from sessionStorage but not in URL, add it
+      // If we have a slug from cookie but not in URL, add it
       let finalQueryString = queryString
       if (slug && !queryString.includes('slug=')) {
         const separator = queryString ? '&' : '?'
@@ -57,3 +74,6 @@ export function OAuthHandler() {
 
   return null
 }
+
+// Export cookie helpers for use in login/register pages
+export { setCookie, getCookie, deleteCookie }

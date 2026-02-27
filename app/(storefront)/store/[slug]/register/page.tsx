@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { setCookie } from '@/components/auth/OAuthHandler'
+
 
 // Google OAuth icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -93,9 +95,10 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Store slug in sessionStorage for retrieval after OAuth redirect
-      sessionStorage.setItem('oauth_slug', slug)
-      console.log('Stored slug in sessionStorage:', slug)
+      // Store slug in cookie for retrieval after OAuth redirect
+      // Cookies persist across the OAuth flow better than sessionStorage
+      setCookie('oauth_slug', slug, 300) // 5 minutes expiry
+      console.log('Stored slug in cookie:', slug)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -115,6 +118,7 @@ export default function RegisterPage() {
       setGoogleLoading(false)
     }
   }
+
 
 
 
