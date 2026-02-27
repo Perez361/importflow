@@ -5,32 +5,21 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-
-  // Try to get slug from various sources
-  // 1. From query parameter
-  let slug = searchParams.get('slug')
   
-  // 2. Or from the URL path
-  if (!slug) {
-    const pathname = new URL(request.url).pathname
-    const pathParts = pathname.split('/').filter(Boolean)
-    // path structure could be: ['auth', 'callback'] or ['store', '{slug}', 'auth', 'callback']
-    const storeIndex = pathParts.indexOf('store')
-    if (storeIndex >= 0 && pathParts[storeIndex + 1]) {
-      slug = pathParts[storeIndex + 1]
-    }
-  }
-
-  console.log('OAuth callback - code:', !!code, 'slug:', slug, 'origin:', origin)
+  // Try to get slug from the URL path
+  const pathname = new URL(request.url).pathname
+  const pathParts = pathname.split('/').filter(Boolean)
+  // path structure: ['store', '{slug}', 'auth', 'callback']
+  const slugIndex = pathParts.indexOf('store') + 1
+  const slug = pathParts[slugIndex]
 
   if (!code) {
     console.error('No code provided in callback')
     return NextResponse.redirect(`${origin}/?error=no_code`)
   }
 
-  // If no slug found, redirect to home with error
   if (!slug) {
-    console.error('No slug found, redirecting to home')
+    console.error('No slug found in callback URL')
     return NextResponse.redirect(`${origin}/?error=no_slug`)
   }
 
@@ -96,6 +85,7 @@ export async function GET(request: Request) {
 
   if (customerError) {
     console.error('Error creating customer:', customerError)
+    // Continue anyway, as the user is authenticated
   }
 
   // Redirect to account page
