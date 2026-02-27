@@ -5,30 +5,50 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const state = searchParams.get('state')
   const cookieStore = await cookies()
 
+  console.log('OAuth callback - code:', !!code, 'state:', state, 'origin:', origin)
+
   // Try to get slug from various sources
-  // 1. From query parameter
-  let slug = searchParams.get('slug')
+  // 1. From OAuth state parameter (most reliable - set by login/register pages)
+  let slug: string | null = null
+  if (state) {
+    try {
+      const decodedState = decodeURIComponent(state)
+      const stateData = JSON.parse(decodedState)
+      slug = stateData.slug || null
+      console.log('Slug from OAuth state:', slug)
+    } catch (e) {
+      console.error('Failed to parse OAuth state:', e)
+    }
+  }
   
-  // 2. From cookies (set by login/register pages)
+  // 2. From query parameter (fallback)
+  if (!slug) {
+    slug = searchParams.get('slug')
+    console.log('Slug from query param:', slug)
+  }
+  
+  // 3. From cookies (fallback)
   if (!slug) {
     slug = cookieStore.get('oauth_slug')?.value || null
     console.log('Slug from cookie:', slug)
   }
   
-  // 3. Or from the URL path
+  // 4. Or from the URL path (fallback)
   if (!slug) {
     const pathname = new URL(request.url).pathname
     const pathParts = pathname.split('/').filter(Boolean)
-    // path structure could be: ['auth', 'callback'] or ['store', '{slug}', 'auth', 'callback']
     const storeIndex = pathParts.indexOf('store')
     if (storeIndex >= 0 && pathParts[storeIndex + 1]) {
       slug = pathParts[storeIndex + 1]
+      console.log('Slug from URL path:', slug)
     }
   }
 
-  console.log('OAuth callback - code:', !!code, 'slug:', slug, 'origin:', origin)
+  console.log('OAuth callback - final slug:', slug)
+
 
 
   if (!code) {

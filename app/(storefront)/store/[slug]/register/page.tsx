@@ -95,23 +95,18 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Store slug in multiple places for maximum reliability
-      // Enhanced cookies with SameSite=None for cross-site OAuth flow
-      console.log('[Register] Storing slug for OAuth:', slug)
-      setCookie('oauth_slug', slug, 600) // 10 minutes expiry
-      // localStorage as backup
-      localStorage.setItem('oauth_slug', slug)
-      sessionStorage.setItem('oauth_slug', slug)
-      console.log('[Register] Stored slug in cookie, localStorage, and sessionStorage')
-      
-      // Use the root callback URL - OAuthHandler will process it
-      const redirectUrl = `${window.location.origin}/?slug=${slug}`
-      console.log('[Register] Redirect URL for Google OAuth:', redirectUrl)
+      // Use OAuth state parameter to pass the slug - most reliable method
+      // State is preserved through the entire OAuth flow by Supabase
+      const state = JSON.stringify({ slug, source: 'storefront_register' })
+      console.log('[Register] Using OAuth state parameter:', state)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            state: encodeURIComponent(state)
+          }
         },
       })
 
@@ -126,6 +121,7 @@ export default function RegisterPage() {
       setGoogleLoading(false)
     }
   }
+
 
 
 
