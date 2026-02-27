@@ -93,6 +93,10 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
+      // Store slug in sessionStorage for retrieval after OAuth redirect
+      sessionStorage.setItem('oauth_slug', slug)
+      console.log('Stored slug in sessionStorage:', slug)
+      
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -111,6 +115,7 @@ export default function RegisterPage() {
       setGoogleLoading(false)
     }
   }
+
 
 
   async function handleSubmit(e: React.FormEvent) {

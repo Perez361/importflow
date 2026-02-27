@@ -75,6 +75,10 @@ function StoreLoginContent() {
     setGoogleLoading(true)
     
     try {
+      // Store slug in sessionStorage for retrieval after OAuth redirect
+      sessionStorage.setItem('oauth_slug', slug)
+      console.log('Stored slug in sessionStorage:', slug)
+      
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -93,6 +97,7 @@ function StoreLoginContent() {
       setGoogleLoading(false)
     }
   }
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

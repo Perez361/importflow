@@ -15,8 +15,31 @@ export function OAuthHandler() {
     const code = searchParams.get('code')
     if (code && !isRedirecting) {
       setIsRedirecting(true)
-      // Redirect to auth callback with all query params
-      const callbackUrl = `/auth/callback${window.location.search}`
+      
+      // Get slug from URL or sessionStorage
+      let slug = searchParams.get('slug')
+      
+      // If no slug in URL, try to get from sessionStorage
+      if (!slug) {
+        slug = sessionStorage.getItem('oauth_slug')
+        console.log('Retrieved slug from sessionStorage:', slug)
+      }
+      
+      // Build the full query string preserving all params
+      const queryString = window.location.search
+      const hash = window.location.hash
+      
+      // If we have a slug from sessionStorage but not in URL, add it
+      let finalQueryString = queryString
+      if (slug && !queryString.includes('slug=')) {
+        const separator = queryString ? '&' : '?'
+        finalQueryString = `${queryString}${separator}slug=${encodeURIComponent(slug)}`
+      }
+      
+      // Redirect to auth callback with all query params and hash
+      const callbackUrl = `/auth/callback${finalQueryString}${hash}`
+      
+      console.log('OAuth redirect:', callbackUrl)
       router.replace(callbackUrl)
     }
   }, [searchParams, router, isRedirecting])
