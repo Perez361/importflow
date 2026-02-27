@@ -95,18 +95,15 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Use OAuth state parameter to pass the slug - most reliable method
-      // State is preserved through the entire OAuth flow by Supabase
-      const state = JSON.stringify({ slug, source: 'storefront_register' })
-      console.log('[Register] Using OAuth state parameter:', state)
+      // Use the store-specific callback URL
+      // This is the simplest and most reliable approach
+      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      console.log('[Register] Google OAuth redirect URL:', redirectUrl)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            state: encodeURIComponent(state)
-          }
+          redirectTo: redirectUrl,
         },
       })
 
@@ -121,6 +118,7 @@ export default function RegisterPage() {
       setGoogleLoading(false)
     }
   }
+
 
 
 

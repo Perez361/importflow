@@ -3,23 +3,30 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams, origin, pathname } = new URL(request.url)
   const code = searchParams.get('code')
-  const cookieStore = await cookies()
   
-  // Try to get slug from various sources
-  let slug = searchParams.get('slug')
-  
-  // From cookies (set by login/register pages)
-  if (!slug) {
-    slug = cookieStore.get('oauth_slug')?.value || null
+  // Extract slug from URL path: /store/{slug}/auth/callback
+  const pathParts = pathname.split('/').filter(Boolean)
+  const storeIndex = pathParts.indexOf('store')
+  let slug = null
+  if (storeIndex >= 0 && pathParts[storeIndex + 1]) {
+    slug = pathParts[storeIndex + 1]
   }
+  
+  console.log('Store callback - pathname:', pathname)
+  console.log('Store callback - extracted slug:', slug)
+  console.log('Store callback - code:', !!code)
 
   if (!code || !slug) {
+    console.error('Missing code or slug - code:', !!code, 'slug:', slug)
     return NextResponse.redirect(`${origin}/?error=invalid_callback`)
   }
 
+  const cookieStore = await cookies()
+
   const supabase = createServerClient(
+
 
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
