@@ -96,7 +96,7 @@ export default function RegisterPage() {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/store/${slug}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?slug=${slug}`,
         },
       })
 
@@ -111,6 +111,7 @@ export default function RegisterPage() {
       setGoogleLoading(false)
     }
   }
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
