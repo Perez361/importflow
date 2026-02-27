@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 // Cookie helper functions
 function setCookie(name: string, value: string, maxAge: number = 300) {
@@ -19,47 +19,73 @@ function deleteCookie(name: string) {
 
 export function OAuthHandler() {
   const searchParams = useSearchParams()
-  const router = useRouter()
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const hasProcessedRef = useRef(false)
 
   useEffect(() => {
     // Only run on client side
     if (typeof window === 'undefined') return
     
+    // Prevent double processing
+    if (hasProcessedRef.current) return
+    
     const code = searchParams.get('code')
-    if (code && !isRedirecting) {
+    console.log('[OAuthHandler] Code detected:', code ? 'YES' : 'NO')
+    console.log('[OAuthHandler] Current URL:', window.location.href)
+    console.log('[OAuthHandler] All cookies:', document.cookie)
+    
+    if (code) {
+      hasProcessedRef.current = true
       setIsRedirecting(true)
       
-      // Get slug from URL or cookie
+      // Get slug from URL first
       let slug = searchParams.get('slug')
+      console.log('[OAuthHandler] Slug from URL:', slug)
       
       // If no slug in URL, try to get from cookie
       if (!slug) {
         slug = getCookie('oauth_slug')
-        console.log('Retrieved slug from cookie:', slug)
+        console.log('[OAuthHandler] Slug from cookie:', slug)
       }
       
-      // Clean up the cookie
+      // Also try localStorage as last resort
+      if (!slug) {
+        slug = localStorage.getItem('oauth_slug')
+        console.log('[OAuthHandler] Slug from localStorage:', slug)
+      }
+      
+      // Clean up all storage
       deleteCookie('oauth_slug')
+      localStorage.removeItem('oauth_slug')
+      sessionStorage.removeItem('oauth_slug')
       
-      // Build the full query string preserving all params
-      const queryString = window.location.search
-      const hash = window.location.hash
+      // Build the final URL
+      let finalUrl = '/auth/callback'
       
-      // If we have a slug from cookie but not in URL, add it
-      let finalQueryString = queryString
-      if (slug && !queryString.includes('slug=')) {
-        const separator = queryString ? '&' : '?'
-        finalQueryString = `${queryString}${separator}slug=${encodeURIComponent(slug)}`
+      if (slug) {
+        finalUrl += `?slug=${encodeURIComponent(slug)}`
+        if (code) {
+          finalUrl += `&code=${code}`
+        }
+      } else if (code) {
+        finalUrl += `?code=${code}`
       }
       
-      // Redirect to auth callback with all query params and hash
-      const callbackUrl = `/auth/callback${finalQueryString}${hash}`
+      // Add any other params from current URL
+      const currentParams = new URLSearchParams(window.location.search)
+      for (const [key, value] of currentParams.entries()) {
+        if (key !== 'slug' && key !== 'code') {
+          finalUrl += finalUrl.includes('?') ? '&' : '?'
+          finalUrl += `${key}=${encodeURIComponent(value)}`
+        }
+      }
       
-      console.log('OAuth redirect:', callbackUrl)
-      router.replace(callbackUrl)
+      console.log('[OAuthHandler] Final redirect URL:', finalUrl)
+      
+      // Use window.location for a full redirect to ensure cookies are properly sent
+      window.location.href = finalUrl
     }
-  }, [searchParams, router, isRedirecting])
+  }, [searchParams])
 
   if (isRedirecting) {
     return (

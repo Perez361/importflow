@@ -95,10 +95,12 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Store slug in cookie for retrieval after OAuth redirect
-      // Cookies persist across the OAuth flow better than sessionStorage
+      // Store slug in multiple places for maximum reliability
+      // Cookies persist across the OAuth flow
       setCookie('oauth_slug', slug, 300) // 5 minutes expiry
-      console.log('Stored slug in cookie:', slug)
+      // localStorage as backup
+      localStorage.setItem('oauth_slug', slug)
+      console.log('Stored slug in cookie and localStorage:', slug)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -118,6 +120,7 @@ export default function RegisterPage() {
       setGoogleLoading(false)
     }
   }
+
 
 
 
