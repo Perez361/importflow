@@ -5,12 +5,19 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const cookieStore = await cookies()
 
   // Try to get slug from various sources
   // 1. From query parameter
   let slug = searchParams.get('slug')
   
-  // 2. Or from the URL path
+  // 2. From cookies (set by login/register pages)
+  if (!slug) {
+    slug = cookieStore.get('oauth_slug')?.value || null
+    console.log('Slug from cookie:', slug)
+  }
+  
+  // 3. Or from the URL path
   if (!slug) {
     const pathname = new URL(request.url).pathname
     const pathParts = pathname.split('/').filter(Boolean)
@@ -23,6 +30,7 @@ export async function GET(request: Request) {
 
   console.log('OAuth callback - code:', !!code, 'slug:', slug, 'origin:', origin)
 
+
   if (!code) {
     console.error('No code provided in callback')
     return NextResponse.redirect(`${origin}/?error=no_code`)
@@ -34,9 +42,8 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?error=no_slug`)
   }
 
-  const cookieStore = await cookies()
-
   const supabase = createServerClient(
+
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

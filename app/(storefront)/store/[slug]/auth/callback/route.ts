@@ -5,15 +5,22 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const slug = searchParams.get('slug') // Store slug
-
-  if (!code || !slug) {
-    return NextResponse.redirect(`${origin}/store/${slug}/login?error=invalid_callback`)
+  const cookieStore = await cookies()
+  
+  // Try to get slug from various sources
+  let slug = searchParams.get('slug')
+  
+  // From cookies (set by login/register pages)
+  if (!slug) {
+    slug = cookieStore.get('oauth_slug')?.value || null
   }
 
-  const cookieStore = await cookies()
+  if (!code || !slug) {
+    return NextResponse.redirect(`${origin}/?error=invalid_callback`)
+  }
 
   const supabase = createServerClient(
+
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
