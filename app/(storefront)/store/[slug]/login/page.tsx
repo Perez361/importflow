@@ -46,8 +46,10 @@ function StoreLoginContent() {
       console.log('[Login] Storing slug for OAuth:', slug)
       localStorage.setItem('oauth_slug', slug)
       sessionStorage.setItem('oauth_slug', slug)
-      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=Lax`
+      // Use SameSite=None; Secure for cross-site OAuth compatibility
+      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
     }
+
   }, [slug])
 
 
@@ -91,7 +93,9 @@ function StoreLoginContent() {
       console.log('[Login] Storing slug before OAuth:', slug)
       localStorage.setItem('oauth_slug', slug)
       sessionStorage.setItem('oauth_slug', slug)
-      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=Lax`
+      // Use SameSite=None; Secure for cross-site OAuth compatibility
+      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
+
       
       // Use the root callback URL - OAuthHandler will process it
       const redirectUrl = `${window.location.origin}/?slug=${encodeURIComponent(slug)}`
