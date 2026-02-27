@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+
 import {
   Package,
   ShoppingCart,
@@ -114,8 +116,21 @@ const benefits = [
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  // Handle OAuth callback redirect
+  useEffect(() => {
+    const code = searchParams.get('code')
+    if (code) {
+      // Redirect to auth callback with all query params
+      const callbackUrl = `/auth/callback${window.location.search}`
+      router.replace(callbackUrl)
+    }
+  }, [searchParams, router])
 
   return (
+
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
