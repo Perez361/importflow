@@ -66,9 +66,21 @@ export function OAuthHandler() {
       hasProcessedRef.current = true
       setIsProcessing(true)
       
-      // Get slug from various sources
-      let slug = searchParams.get('slug')
-      console.log('[OAuthHandler] Slug from URL:', slug)
+      // Get slug from URL hash fragment (Supabase doesn't strip hash)
+      let slug: string | null = null
+      const hash = window.location.hash
+      if (hash) {
+        const hashParams = new URLSearchParams(hash.substring(1))
+        slug = hashParams.get('slug')
+        console.log('[OAuthHandler] Slug from URL hash:', slug)
+      }
+      
+      // Fallback to query param if hash doesn't have it
+      if (!slug) {
+        slug = searchParams.get('slug')
+        console.log('[OAuthHandler] Slug from URL query:', slug)
+      }
+
       
       if (!slug) {
         slug = getCookie('oauth_slug')

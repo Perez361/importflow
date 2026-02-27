@@ -114,9 +114,10 @@ export default function RegisterPage() {
       // Use SameSite=None; Secure for cross-site OAuth compatibility
       document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
       
-      // Use the store-specific callback URL - the slug is in the path
-      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      // Use hash fragment to pass slug - Supabase won't strip this
+      const redirectUrl = `${window.location.origin}/#slug=${encodeURIComponent(slug)}`
       console.log('[Register] Google OAuth redirect URL:', redirectUrl)
+
 
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
