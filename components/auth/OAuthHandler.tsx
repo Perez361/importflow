@@ -4,19 +4,38 @@ import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// Cookie helper functions
-function setCookie(name: string, value: string, maxAge: number = 300) {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`
+// Cookie helper functions with enhanced settings for OAuth flow
+function setCookie(name: string, value: string, maxAge: number = 600) {
+  // Use SameSite=None and Secure for cross-site OAuth redirects
+  // This allows the cookie to persist through the Google OAuth flow
+  const isSecure = window.location.protocol === 'https:'
+  const secureFlag = isSecure ? '; Secure' : ''
+  const cookieString = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=None${secureFlag}`
+  document.cookie = cookieString
+  console.log(`[OAuthHandler] Set cookie ${name}:`, cookieString)
 }
 
 function getCookie(name: string): string | null {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
-  return match ? decodeURIComponent(match[2]) : null
+  const cookies = document.cookie.split(';')
+  for (let cookie of cookies) {
+    const [cookieName, cookieValue] = cookie.trim().split('=')
+    if (cookieName === name) {
+      console.log(`[OAuthHandler] Found cookie ${name}:`, decodeURIComponent(cookieValue))
+      return decodeURIComponent(cookieValue)
+    }
+  }
+  console.log(`[OAuthHandler] Cookie ${name} not found`)
+  return null
 }
 
 function deleteCookie(name: string) {
-  document.cookie = `${name}=; path=/; max-age=0`
+  // Delete with SameSite=None to ensure it matches the original cookie
+  const isSecure = window.location.protocol === 'https:'
+  const secureFlag = isSecure ? '; Secure' : ''
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=None${secureFlag}`
+  console.log(`[OAuthHandler] Deleted cookie ${name}`)
 }
+
 
 export function OAuthHandler() {
   const searchParams = useSearchParams()

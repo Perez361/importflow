@@ -96,30 +96,37 @@ export default function RegisterPage() {
     
     try {
       // Store slug in multiple places for maximum reliability
-      // Cookies persist across the OAuth flow
-      setCookie('oauth_slug', slug, 300) // 5 minutes expiry
+      // Enhanced cookies with SameSite=None for cross-site OAuth flow
+      console.log('[Register] Storing slug for OAuth:', slug)
+      setCookie('oauth_slug', slug, 600) // 10 minutes expiry
       // localStorage as backup
       localStorage.setItem('oauth_slug', slug)
-      console.log('Stored slug in cookie and localStorage:', slug)
+      sessionStorage.setItem('oauth_slug', slug)
+      console.log('[Register] Stored slug in cookie, localStorage, and sessionStorage')
+      
+      // Use the root callback URL - OAuthHandler will process it
+      const redirectUrl = `${window.location.origin}/?slug=${slug}`
+      console.log('[Register] Redirect URL for Google OAuth:', redirectUrl)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?slug=${slug}`,
+          redirectTo: redirectUrl,
         },
       })
 
       if (oauthError) {
-        console.error('Google OAuth error:', oauthError.message)
+        console.error('[Register] Google OAuth error:', oauthError.message)
         setError('Failed to sign up with Google. Please try again.')
         setGoogleLoading(false)
       }
     } catch (err) {
-      console.error('Google OAuth error:', err)
+      console.error('[Register] Google OAuth error:', err)
       setError('An unexpected error occurred with Google sign-up.')
       setGoogleLoading(false)
     }
   }
+
 
 
 
