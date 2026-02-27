@@ -81,7 +81,17 @@ export default function RegisterPage() {
     }
 
     fetchImporter()
+    
+    // Store slug immediately for OAuth flow
+    // This ensures slug is available even if user refreshes or comes back from OAuth
+    if (slug) {
+      console.log('[Register] Storing slug for OAuth:', slug)
+      localStorage.setItem('oauth_slug', slug)
+      sessionStorage.setItem('oauth_slug', slug)
+      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=Lax`
+    }
   }, [slug, supabase])
+
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target
@@ -95,9 +105,14 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Use the store-specific callback URL
-      // This is the simplest and most reliable approach
-      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      // Store slug in multiple places for maximum reliability
+      console.log('[Register] Storing slug before OAuth:', slug)
+      localStorage.setItem('oauth_slug', slug)
+      sessionStorage.setItem('oauth_slug', slug)
+      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=Lax`
+      
+      // Use the root callback URL - OAuthHandler will process it
+      const redirectUrl = `${window.location.origin}/?slug=${encodeURIComponent(slug)}`
       console.log('[Register] Google OAuth redirect URL:', redirectUrl)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -118,6 +133,7 @@ export default function RegisterPage() {
       setGoogleLoading(false)
     }
   }
+
 
 
 
