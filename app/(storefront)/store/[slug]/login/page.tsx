@@ -78,7 +78,7 @@ function StoreLoginContent() {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/store/${slug}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?slug=${slug}`,
         },
       })
 
