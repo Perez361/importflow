@@ -66,16 +66,31 @@ export function OAuthHandler() {
       hasProcessedRef.current = true
       setIsProcessing(true)
       
-      // Get slug from URL hash fragment (Supabase doesn't strip hash)
+      // Get slug from OAuth state parameter (most reliable - set by login/register pages)
       let slug: string | null = null
-      const hash = window.location.hash
-      if (hash) {
-        const hashParams = new URLSearchParams(hash.substring(1))
-        slug = hashParams.get('slug')
-        console.log('[OAuthHandler] Slug from URL hash:', slug)
+      const state = searchParams.get('state')
+      if (state) {
+        try {
+          const decodedState = decodeURIComponent(state)
+          const stateData = JSON.parse(decodedState)
+          slug = stateData.slug || null
+          console.log('[OAuthHandler] Slug from OAuth state:', slug)
+        } catch (e) {
+          console.error('[OAuthHandler] Failed to parse OAuth state:', e)
+        }
       }
       
-      // Fallback to query param if hash doesn't have it
+      // Fallback to URL hash fragment
+      if (!slug) {
+        const hash = window.location.hash
+        if (hash) {
+          const hashParams = new URLSearchParams(hash.substring(1))
+          slug = hashParams.get('slug')
+          console.log('[OAuthHandler] Slug from URL hash:', slug)
+        }
+      }
+      
+      // Fallback to query param
       if (!slug) {
         slug = searchParams.get('slug')
         console.log('[OAuthHandler] Slug from URL query:', slug)

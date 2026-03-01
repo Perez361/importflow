@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { setCookie } from '@/components/auth/OAuthHandler'
 
 
 // Google OAuth icon component
@@ -83,15 +82,12 @@ export default function RegisterPage() {
     fetchImporter()
     
     // Store slug immediately for OAuth flow
-    // This ensures slug is available even if user refreshes or comes back from OAuth
     if (slug) {
       console.log('[Register] Storing slug for OAuth:', slug)
       localStorage.setItem('oauth_slug', slug)
       sessionStorage.setItem('oauth_slug', slug)
-      // Use SameSite=None; Secure for cross-site OAuth compatibility
       document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
     }
-
   }, [slug, supabase])
 
 
@@ -107,23 +103,22 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Store slug in multiple places for maximum reliability
       console.log('[Register] Storing slug before OAuth:', slug)
       localStorage.setItem('oauth_slug', slug)
       sessionStorage.setItem('oauth_slug', slug)
-      // Use SameSite=None; Secure for cross-site OAuth compatibility
       document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
       
-      // Use hash fragment to pass slug - Supabase won't strip this
-      const redirectUrl = `${window.location.origin}/#slug=${encodeURIComponent(slug)}`
-      console.log('[Register] Google OAuth redirect URL:', redirectUrl)
-
-
+      // Use OAuth state parameter to pass slug - this is preserved through the flow
+      const state = JSON.stringify({ slug, redirectTo: `/store/${slug}/account` })
+      console.log('[Register] OAuth state:', state)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            state: encodeURIComponent(state)
+          }
         },
       })
 
@@ -139,19 +134,10 @@ export default function RegisterPage() {
     }
   }
 
-
-
-
-
-
-
-
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
 
-    // Validation
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters')
       return
@@ -165,7 +151,6 @@ export default function RegisterPage() {
     setSubmitting(true)
 
     try {
-      // Register using Supabase Auth
       const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
       
       const { data, error: authError } = await supabase.auth.signUp({
@@ -195,11 +180,9 @@ export default function RegisterPage() {
         return
       }
 
-      // Show success message
       setSuccess(true)
       setConfirmedEmail(formData.email)
       
-      // Reset form
       setFormData({
         name: '',
         email: '',

@@ -96,16 +96,18 @@ function StoreLoginContent() {
       // Use SameSite=None; Secure for cross-site OAuth compatibility
       document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
       
-      // Use hash fragment to pass slug - Supabase won't strip this
-      const redirectUrl = `${window.location.origin}/#slug=${encodeURIComponent(slug)}`
-      console.log('[Login] Google OAuth redirect URL:', redirectUrl)
-
-
+      // Use OAuth state parameter to pass slug - this is preserved through the flow
+      // The state will be returned in the callback URL by Supabase
+      const state = JSON.stringify({ slug, redirectTo: `/store/${slug}/account` })
+      console.log('[Login] OAuth state:', state)
       
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            state: encodeURIComponent(state)
+          }
         },
       })
 
@@ -120,13 +122,6 @@ function StoreLoginContent() {
       setGoogleLoading(false)
     }
   }
-
-
-
-
-
-
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
