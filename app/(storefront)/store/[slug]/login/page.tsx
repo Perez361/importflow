@@ -77,13 +77,19 @@ function StoreLoginContent() {
     setGoogleLoading(true)
     
     try {
-      // Use hash to preserve slug through OAuth redirect - Supabase doesn't clear hash
-      // We'll encode the slug in the hash: #slug=store-slug&callback=/store/slug/auth/callback
-      const callbackUrl = `${window.location.origin}/auth/callback`
-      const hashData = `slug=${encodeURIComponent(slug)}&callback=${encodeURIComponent(callbackUrl)}`
+      // Store slug in sessionStorage before OAuth - this will persist through redirects
+      // We'll read this in the OAuthHandler on the landing page
+      sessionStorage.setItem('oauth_slug', slug)
+      console.log('[Login] Stored slug in sessionStorage:', slug)
       
-      // Redirect to the root auth callback with the slug info in the hash
+      // Also store in localStorage as backup
+      localStorage.setItem('oauth_slug', slug)
+      
+      // Try to use hash to pass slug, but also rely on sessionStorage
+      const callbackUrl = `${window.location.origin}/auth/callback`
+      const hashData = `slug=${encodeURIComponent(slug)}`
       const redirectUrl = `${callbackUrl}#${hashData}`
+      
       console.log('[Login] Google OAuth redirect URL:', redirectUrl)
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({

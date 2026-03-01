@@ -95,11 +95,16 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Use hash to preserve slug through OAuth redirect - Supabase doesn't clear hash
-      const callbackUrl = `${window.location.origin}/auth/callback`
-      const hashData = `slug=${encodeURIComponent(slug)}&callback=${encodeURIComponent(callbackUrl)}`
+      // Store slug in sessionStorage before OAuth - this will persist through redirects
+      sessionStorage.setItem('oauth_slug', slug)
+      localStorage.setItem('oauth_slug', slug)
+      console.log('[Register] Stored slug in sessionStorage:', slug)
       
+      // Use hash to pass slug (backup to sessionStorage)
+      const callbackUrl = `${window.location.origin}/auth/callback`
+      const hashData = `slug=${encodeURIComponent(slug)}`
       const redirectUrl = `${callbackUrl}#${hashData}`
+      
       console.log('[Register] Google OAuth redirect URL:', redirectUrl)
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({

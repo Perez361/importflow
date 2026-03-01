@@ -23,48 +23,41 @@ export function OAuthHandler() {
     console.log('[OAuthHandler] Code detected:', code ? 'YES' : 'NO')
     console.log('[OAuthHandler] Current URL:', window.location.href)
     console.log('[OAuthHandler] Hash:', window.location.hash)
+    console.log('[OAuthHandler] sessionStorage:', sessionStorage.getItem('oauth_slug'))
+    console.log('[OAuthHandler] localStorage:', localStorage.getItem('oauth_slug'))
     
     if (code) {
       hasProcessedRef.current = true
       setIsProcessing(true)
       
-      // Get slug from URL hash fragment - Supabase doesn't clear hash during OAuth redirect!
-      // Format: #slug=store-slug&callback=/store/slug/auth/callback
+      // Get slug from multiple sources (in order of priority):
+      
+      // 1. URL hash fragment - Supabase doesn't clear hash during OAuth redirect!
       let slug: string | null = null
-      let callbackUrl: string | null = null
       
       const hash = window.location.hash
       if (hash && hash.startsWith('#')) {
         const hashParams = new URLSearchParams(hash.substring(1))
         slug = hashParams.get('slug')
-        callbackUrl = hashParams.get('callback')
         console.log('[OAuthHandler] Slug from hash:', slug)
-        console.log('[OAuthHandler] Callback from hash:', callbackUrl)
       }
       
-      // Fallback to query param
+      // 2. sessionStorage - set by the login page before OAuth
       if (!slug) {
-        slug = searchParams.get('slug')
-        console.log('[OAuthHandler] Slug from query:', slug)
+        slug = sessionStorage.getItem('oauth_slug')
+        console.log('[OAuthHandler] Slug from sessionStorage:', slug)
       }
       
-      // Fallback to cookie
-      if (!slug) {
-        const cookies = document.cookie.split(';')
-        for (let cookie of cookies) {
-          const [name, value] = cookie.trim().split('=')
-          if (name === 'oauth_slug') {
-            slug = value
-            console.log('[OAuthHandler] Slug from cookie:', slug)
-            break
-          }
-        }
-      }
-      
-      // Fallback to localStorage
+      // 3. localStorage - set by the login page before OAuth
       if (!slug) {
         slug = localStorage.getItem('oauth_slug')
         console.log('[OAuthHandler] Slug from localStorage:', slug)
+      }
+      
+      // 4. query param (fallback)
+      if (!slug) {
+        slug = searchParams.get('slug')
+        console.log('[OAuthHandler] Slug from query:', slug)
       }
       
       if (!slug) {
@@ -75,11 +68,11 @@ export function OAuthHandler() {
       }
       
       // Handle the OAuth exchange
-      handleOAuthExchange(code, slug, callbackUrl)
+      handleOAuthExchange(code, slug)
     }
   }, [searchParams, router])
 
-  async function handleOAuthExchange(code: string, slug: string, callbackUrl?: string | null) {
+  async function handleOAuthExchange(code: string, slug: string) {
     try {
       console.log('[OAuthHandler] Starting OAuth exchange for slug:', slug)
       
@@ -162,11 +155,13 @@ export function OAuthHandler() {
         localStorage.setItem(`customer_${slug}`, JSON.stringify(customerSession))
       }
       
-      // Use callback URL if provided, otherwise default to account page
-      const redirectUrl = callbackUrl || `/store/${slug}/account`
-      console.log('[OAuthHandler] Redirecting to:', redirectUrl)
+      // Clean up storage
+      sessionStorage.removeItem('oauth_slug')
+      localStorage.removeItem('oauth_slug')
       
       // Redirect to account page
+      const redirectUrl = `/store/${slug}/account`
+      console.log('[OAuthHandler] Redirecting to:', redirectUrl)
       router.push(`${redirectUrl}?success=true`)
       
     } catch (err) {
