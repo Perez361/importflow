@@ -89,29 +89,21 @@ export default function RegisterPage() {
     setError(null)
   }
 
-  // Handle Google OAuth sign-up using state parameter
+  // Handle Google OAuth sign-up - use store-specific callback URL
   const handleGoogleSignUp = async () => {
     setError(null)
     setGoogleLoading(true)
     
     try {
-      // Use OAuth state parameter - Supabase explicitly preserves this through the entire OAuth flow
-      const stateData = {
-        slug: slug,
-        callback: `/store/${slug}/account`,
-        source: 'storefront_register'
-      }
-      const encodedState = btoa(JSON.stringify(stateData))
+      // Use store-specific callback URL
+      const callbackUrl = `${window.location.origin}/store/${slug}/auth/callback`
       
-      console.log('[Register] Using OAuth state:', stateData)
+      console.log('[Register] Google OAuth callback URL:', callbackUrl)
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            state: encodedState
-          }
+          redirectTo: callbackUrl,
         },
       })
 
@@ -144,7 +136,7 @@ export default function RegisterPage() {
     setSubmitting(true)
 
     try {
-      const redirectUrl = `${window.location.origin}/auth/callback`
+      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
       
       const { data, error: authError } = await supabase.auth.signUp({
         email: formData.email,
