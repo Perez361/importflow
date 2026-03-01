@@ -71,31 +71,30 @@ function StoreLoginContent() {
     setError(null)
   }
 
-  // Handle Google OAuth sign-in
+  // Handle Google OAuth sign-in using state parameter
   const handleGoogleSignIn = async () => {
     setError(null)
     setGoogleLoading(true)
     
     try {
-      // Store slug in sessionStorage before OAuth - this will persist through redirects
-      // We'll read this in the OAuthHandler on the landing page
-      sessionStorage.setItem('oauth_slug', slug)
-      console.log('[Login] Stored slug in sessionStorage:', slug)
+      // Use OAuth state parameter - Supabase explicitly preserves this through the entire OAuth flow
+      // We'll encode the slug in the state parameter
+      const stateData = {
+        slug: slug,
+        callback: `/store/${slug}/account`,
+        source: 'storefront_login'
+      }
+      const encodedState = btoa(JSON.stringify(stateData))
       
-      // Also store in localStorage as backup
-      localStorage.setItem('oauth_slug', slug)
+      console.log('[Login] Using OAuth state:', stateData)
       
-      // Try to use hash to pass slug, but also rely on sessionStorage
-      const callbackUrl = `${window.location.origin}/auth/callback`
-      const hashData = `slug=${encodeURIComponent(slug)}`
-      const redirectUrl = `${callbackUrl}#${hashData}`
-      
-      console.log('[Login] Google OAuth redirect URL:', redirectUrl)
-
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            state: encodedState
+          }
         },
       })
 

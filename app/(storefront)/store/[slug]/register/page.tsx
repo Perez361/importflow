@@ -89,28 +89,29 @@ export default function RegisterPage() {
     setError(null)
   }
 
-  // Handle Google OAuth sign-up
+  // Handle Google OAuth sign-up using state parameter
   const handleGoogleSignUp = async () => {
     setError(null)
     setGoogleLoading(true)
     
     try {
-      // Store slug in sessionStorage before OAuth - this will persist through redirects
-      sessionStorage.setItem('oauth_slug', slug)
-      localStorage.setItem('oauth_slug', slug)
-      console.log('[Register] Stored slug in sessionStorage:', slug)
+      // Use OAuth state parameter - Supabase explicitly preserves this through the entire OAuth flow
+      const stateData = {
+        slug: slug,
+        callback: `/store/${slug}/account`,
+        source: 'storefront_register'
+      }
+      const encodedState = btoa(JSON.stringify(stateData))
       
-      // Use hash to pass slug (backup to sessionStorage)
-      const callbackUrl = `${window.location.origin}/auth/callback`
-      const hashData = `slug=${encodeURIComponent(slug)}`
-      const redirectUrl = `${callbackUrl}#${hashData}`
-      
-      console.log('[Register] Google OAuth redirect URL:', redirectUrl)
+      console.log('[Register] Using OAuth state:', stateData)
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            state: encodedState
+          }
         },
       })
 
