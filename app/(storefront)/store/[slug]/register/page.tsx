@@ -80,14 +80,6 @@ export default function RegisterPage() {
     }
 
     fetchImporter()
-    
-    // Store slug immediately for OAuth flow
-    if (slug) {
-      console.log('[Register] Storing slug for OAuth:', slug)
-      localStorage.setItem('oauth_slug', slug)
-      sessionStorage.setItem('oauth_slug', slug)
-      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
-    }
   }, [slug, supabase])
 
 
@@ -103,14 +95,11 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
-      // Store slug before OAuth
-      console.log('[Register] Storing slug before OAuth:', slug)
-      localStorage.setItem('oauth_slug', slug)
-      sessionStorage.setItem('oauth_slug', slug)
-      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
+      // Use hash to preserve slug through OAuth redirect - Supabase doesn't clear hash
+      const callbackUrl = `${window.location.origin}/auth/callback`
+      const hashData = `slug=${encodeURIComponent(slug)}&callback=${encodeURIComponent(callbackUrl)}`
       
-      // Use store-specific callback URL - slug is in URL path
-      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      const redirectUrl = `${callbackUrl}#${hashData}`
       console.log('[Register] Google OAuth redirect URL:', redirectUrl)
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -149,7 +138,7 @@ export default function RegisterPage() {
     setSubmitting(true)
 
     try {
-      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      const redirectUrl = `${window.location.origin}/auth/callback`
       
       const { data, error: authError } = await supabase.auth.signUp({
         email: formData.email,

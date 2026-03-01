@@ -4,38 +4,6 @@ import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// Cookie helper functions with enhanced settings for OAuth flow
-function setCookie(name: string, value: string, maxAge: number = 600) {
-  // Use SameSite=None and Secure for cross-site OAuth redirects
-  // This allows the cookie to persist through the Google OAuth flow
-  const isSecure = window.location.protocol === 'https:'
-  const secureFlag = isSecure ? '; Secure' : ''
-  const cookieString = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=None${secureFlag}`
-  document.cookie = cookieString
-  console.log(`[OAuthHandler] Set cookie ${name}:`, cookieString)
-}
-
-function getCookie(name: string): string | null {
-  const cookies = document.cookie.split(';')
-  for (let cookie of cookies) {
-    const [cookieName, cookieValue] = cookie.trim().split('=')
-    if (cookieName === name) {
-      console.log(`[OAuthHandler] Found cookie ${name}:`, decodeURIComponent(cookieValue))
-      return decodeURIComponent(cookieValue)
-    }
-  }
-  console.log(`[OAuthHandler] Cookie ${name} not found`)
-  return null
-}
-
-function deleteCookie(name: string) {
-  // Delete with SameSite=None to ensure it matches the original cookie
-  const isSecure = window.location.protocol === 'https:'
-  const secureFlag = isSecure ? '; Secure' : ''
-  document.cookie = `${name}=; path=/; max-age=0; SameSite=None${secureFlag}`
-  console.log(`[OAuthHandler] Deleted cookie ${name}`)
-}
-
 
 export function OAuthHandler() {
   const searchParams = useSearchParams()
@@ -54,63 +22,50 @@ export function OAuthHandler() {
     const code = searchParams.get('code')
     console.log('[OAuthHandler] Code detected:', code ? 'YES' : 'NO')
     console.log('[OAuthHandler] Current URL:', window.location.href)
-    console.log('[OAuthHandler] All cookies:', document.cookie)
-    
-    // Check if there's an error from a previous attempt
-    const urlError = searchParams.get('error')
-    if (urlError) {
-      console.log('[OAuthHandler] Found error in URL:', urlError)
-    }
+    console.log('[OAuthHandler] Hash:', window.location.hash)
     
     if (code) {
       hasProcessedRef.current = true
       setIsProcessing(true)
       
-      // Get slug from OAuth state parameter (most reliable - set by login/register pages)
+      // Get slug from URL hash fragment - Supabase doesn't clear hash during OAuth redirect!
+      // Format: #slug=store-slug&callback=/store/slug/auth/callback
       let slug: string | null = null
-      const state = searchParams.get('state')
-      if (state) {
-        try {
-          const decodedState = decodeURIComponent(state)
-          const stateData = JSON.parse(decodedState)
-          slug = stateData.slug || null
-          console.log('[OAuthHandler] Slug from OAuth state:', slug)
-        } catch (e) {
-          console.error('[OAuthHandler] Failed to parse OAuth state:', e)
-        }
-      }
+      let callbackUrl: string | null = null
       
-      // Fallback to URL hash fragment
-      if (!slug) {
-        const hash = window.location.hash
-        if (hash) {
-          const hashParams = new URLSearchParams(hash.substring(1))
-          slug = hashParams.get('slug')
-          console.log('[OAuthHandler] Slug from URL hash:', slug)
-        }
+      const hash = window.location.hash
+      if (hash && hash.startsWith('#')) {
+        const hashParams = new URLSearchParams(hash.substring(1))
+        slug = hashParams.get('slug')
+        callbackUrl = hashParams.get('callback')
+        console.log('[OAuthHandler] Slug from hash:', slug)
+        console.log('[OAuthHandler] Callback from hash:', callbackUrl)
       }
       
       // Fallback to query param
       if (!slug) {
         slug = searchParams.get('slug')
-        console.log('[OAuthHandler] Slug from URL query:', slug)
+        console.log('[OAuthHandler] Slug from query:', slug)
       }
-
       
+      // Fallback to cookie
       if (!slug) {
-        slug = getCookie('oauth_slug')
-        console.log('[OAuthHandler] Slug from cookie:', slug)
+        const cookies = document.cookie.split(';')
+        for (let cookie of cookies) {
+          const [name, value] = cookie.trim().split('=')
+          if (name === 'oauth_slug') {
+            slug = value
+            console.log('[OAuthHandler] Slug from cookie:', slug)
+            break
+          }
+        }
       }
       
+      // Fallback to localStorage
       if (!slug) {
         slug = localStorage.getItem('oauth_slug')
         console.log('[OAuthHandler] Slug from localStorage:', slug)
       }
-      
-      // Clean up storage
-      deleteCookie('oauth_slug')
-      localStorage.removeItem('oauth_slug')
-      sessionStorage.removeItem('oauth_slug')
       
       if (!slug) {
         console.error('[OAuthHandler] No slug found!')
@@ -119,12 +74,12 @@ export function OAuthHandler() {
         return
       }
       
-      // Handle the OAuth exchange directly
-      handleOAuthExchange(code, slug)
+      // Handle the OAuth exchange
+      handleOAuthExchange(code, slug, callbackUrl)
     }
   }, [searchParams, router])
 
-  async function handleOAuthExchange(code: string, slug: string) {
+  async function handleOAuthExchange(code: string, slug: string, callbackUrl?: string | null) {
     try {
       console.log('[OAuthHandler] Starting OAuth exchange for slug:', slug)
       
@@ -207,10 +162,12 @@ export function OAuthHandler() {
         localStorage.setItem(`customer_${slug}`, JSON.stringify(customerSession))
       }
       
-      console.log('[OAuthHandler] Redirecting to account page...')
+      // Use callback URL if provided, otherwise default to account page
+      const redirectUrl = callbackUrl || `/store/${slug}/account`
+      console.log('[OAuthHandler] Redirecting to:', redirectUrl)
       
       // Redirect to account page
-      router.push(`/store/${slug}/account?success=true`)
+      router.push(`${redirectUrl}?success=true`)
       
     } catch (err) {
       console.error('[OAuthHandler] Unexpected error:', err)
@@ -254,6 +211,3 @@ export function OAuthHandler() {
 
   return null
 }
-
-// Export cookie helpers for use in login/register pages
-export { setCookie, getCookie, deleteCookie }

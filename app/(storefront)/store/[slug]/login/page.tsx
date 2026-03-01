@@ -38,15 +38,6 @@ function StoreLoginContent() {
 
   useEffect(() => {
     fetchImporter()
-    
-    // Store slug immediately for OAuth flow
-    if (slug) {
-      console.log('[Login] Storing slug for OAuth:', slug)
-      localStorage.setItem('oauth_slug', slug)
-      sessionStorage.setItem('oauth_slug', slug)
-      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
-    }
-
   }, [slug])
 
 
@@ -86,14 +77,13 @@ function StoreLoginContent() {
     setGoogleLoading(true)
     
     try {
-      // Store slug before OAuth
-      console.log('[Login] Storing slug before OAuth:', slug)
-      localStorage.setItem('oauth_slug', slug)
-      sessionStorage.setItem('oauth_slug', slug)
-      document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
+      // Use hash to preserve slug through OAuth redirect - Supabase doesn't clear hash
+      // We'll encode the slug in the hash: #slug=store-slug&callback=/store/slug/auth/callback
+      const callbackUrl = `${window.location.origin}/auth/callback`
+      const hashData = `slug=${encodeURIComponent(slug)}&callback=${encodeURIComponent(callbackUrl)}`
       
-      // Use store-specific callback URL - slug is in URL path
-      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      // Redirect to the root auth callback with the slug info in the hash
+      const redirectUrl = `${callbackUrl}#${hashData}`
       console.log('[Login] Google OAuth redirect URL:', redirectUrl)
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
