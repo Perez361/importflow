@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { setCookie } from '@/components/auth/OAuthHandler'
 
 
 // Google OAuth icon component
@@ -41,12 +40,10 @@ function StoreLoginContent() {
     fetchImporter()
     
     // Store slug immediately for OAuth flow
-    // This ensures slug is available even if user refreshes or comes back from OAuth
     if (slug) {
       console.log('[Login] Storing slug for OAuth:', slug)
       localStorage.setItem('oauth_slug', slug)
       sessionStorage.setItem('oauth_slug', slug)
-      // Use SameSite=None; Secure for cross-site OAuth compatibility
       document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
     }
 
@@ -89,25 +86,20 @@ function StoreLoginContent() {
     setGoogleLoading(true)
     
     try {
-      // Store slug in multiple places for maximum reliability
+      // Store slug before OAuth
       console.log('[Login] Storing slug before OAuth:', slug)
       localStorage.setItem('oauth_slug', slug)
       sessionStorage.setItem('oauth_slug', slug)
-      // Use SameSite=None; Secure for cross-site OAuth compatibility
       document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
       
-      // Use OAuth state parameter to pass slug - this is preserved through the flow
-      // The state will be returned in the callback URL by Supabase
-      const state = JSON.stringify({ slug, redirectTo: `/store/${slug}/account` })
-      console.log('[Login] OAuth state:', state)
-      
+      // Use store-specific callback URL - slug is in URL path
+      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      console.log('[Login] Google OAuth redirect URL:', redirectUrl)
+
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            state: encodeURIComponent(state)
-          }
+          redirectTo: redirectUrl,
         },
       })
 

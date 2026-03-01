@@ -103,22 +103,20 @@ export default function RegisterPage() {
     setGoogleLoading(true)
     
     try {
+      // Store slug before OAuth
       console.log('[Register] Storing slug before OAuth:', slug)
       localStorage.setItem('oauth_slug', slug)
       sessionStorage.setItem('oauth_slug', slug)
       document.cookie = `oauth_slug=${slug}; path=/; max-age=600; SameSite=None; Secure`
       
-      // Use OAuth state parameter to pass slug - this is preserved through the flow
-      const state = JSON.stringify({ slug, redirectTo: `/store/${slug}/account` })
-      console.log('[Register] OAuth state:', state)
-      
+      // Use store-specific callback URL - slug is in URL path
+      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      console.log('[Register] Google OAuth redirect URL:', redirectUrl)
+
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            state: encodeURIComponent(state)
-          }
+          redirectTo: redirectUrl,
         },
       })
 
