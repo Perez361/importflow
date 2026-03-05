@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -25,10 +25,69 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [initializing, setInitializing] = useState(true)
 
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Check if user is already authenticated and redirect accordingly
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          // User is already logged in, check their profile and redirect
+          const { data: profile } = await supabase
+            .from('users')
+            .select('role, is_active')
+            .eq('id', session.user.id)
+            .single()
+          
+          if (profile) {
+            if (profile.role === 'super_admin') {
+              // Redirect super admins to admin panel
+              window.location.href = '/admin'
+              return
+            } else if (profile.is_active) {
+              // Redirect importers/staff to dashboard
+              window.location.href = '/dashboard'
+              return
+            } else {
+              // Account is deactivated, sign them out
+              await supabase.auth.signOut()
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error checking auth:', err)
+      } finally {
+        setInitializing(false)
+      }
+    }
+    
+    checkAuth()
+  }, [supabase])
+
+  // Show loading while checking auth
+  if (initializing) {
+    return (
+      <div className="max-w-md mx-auto">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-1/2 mx-auto" />
+            <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-3/4 mx-auto" />
+            <div className="space-y-4">
+              <div className="h-12 bg-zinc-200 dark:bg-zinc-700 rounded" />
+              <div className="h-12 bg-zinc-200 dark:bg-zinc-700 rounded" />
+              <div className="h-12 bg-zinc-200 dark:bg-zinc-700 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Handle Google OAuth sign-in
   const handleGoogleSignIn = async () => {

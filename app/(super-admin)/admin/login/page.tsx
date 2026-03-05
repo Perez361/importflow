@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -25,10 +25,59 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [initializing, setInitializing] = useState(true)
 
   const supabase = createClient()
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  // Check if user is already authenticated as super admin and redirect accordingly
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          // User is already logged in, check their profile
+          const { data: profile } = await supabase
+            .from('users')
+            .select('role, is_active')
+            .eq('id', session.user.id)
+            .single()
+          
+          if (profile) {
+            if (profile.role === 'super_admin' && profile.is_active) {
+              // Redirect super admins to admin panel
+              window.location.href = '/admin'
+              return
+            } else if (profile.role !== 'super_admin') {
+              // Not a super admin, redirect to regular dashboard
+              window.location.href = '/dashboard'
+              return
+            } else if (!profile.is_active) {
+              // Account is deactivated, sign them out
+              await supabase.auth.signOut()
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error checking auth:', err)
+      } finally {
+        setInitializing(false)
+      }
+    }
+    
+    checkAuth()
+  }, [supabase])
+
+  // Show loading while checking auth
+  if (initializing) {
+    return (
+      <div className="card p-8 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   // Handle Google OAuth sign-in
   const handleGoogleSignIn = async () => {
