@@ -38,7 +38,25 @@ function StoreLoginContent() {
 
   useEffect(() => {
     fetchImporter()
-  }, [slug])
+    
+    // Check for customer_data from OAuth callback
+    const customerDataParam = searchParams.get('customer_data')
+    const redirectTo = searchParams.get('redirect')
+    
+    if (customerDataParam) {
+      try {
+        const customerData = JSON.parse(decodeURIComponent(customerDataParam))
+        localStorage.setItem(`customer_${slug}`, JSON.stringify(customerData))
+        
+        // Clear the query params and redirect
+        const targetUrl = redirectTo || `/store/${slug}/account`
+        window.location.href = targetUrl
+        return
+      } catch (err) {
+        console.error('Error parsing customer data:', err)
+      }
+    }
+  }, [slug, searchParams])
 
 
   const fetchImporter = async () => {

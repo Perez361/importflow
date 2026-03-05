@@ -26,8 +26,6 @@ export async function GET(request: Request) {
   const cookieStore = await cookies()
 
   const supabase = createServerClient(
-
-
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -72,7 +70,7 @@ export async function GET(request: Request) {
   }
 
   // Create or update store customer record
-  const { error: customerError } = await supabase
+  const { data: customer, error: customerError } = await supabase
     .from('store_customers')
     .upsert({
       importer_id: importer.id,
@@ -84,13 +82,28 @@ export async function GET(request: Request) {
     }, {
       onConflict: 'importer_id, auth_id'
     })
+    .select()
+    .single()
 
   if (customerError) {
     console.error('Error creating customer:', customerError)
     // Continue anyway, as the user is authenticated
   }
 
-  // Store session info in localStorage via a redirect with the info
-  // The client-side will pick this up
-  return NextResponse.redirect(`${origin}/store/${slug}/account?success=true`)
+  // Encode customer data to pass in URL
+  const customerData = {
+    id: customer?.id,
+    auth_id: user.id,
+    name: customer?.name || user.email?.split('@')[0] || 'Customer',
+    email: customer?.email || user.email || '',
+    phone: customer?.phone,
+    address: customer?.address,
+    city: customer?.city,
+    importer_id: importer.id
+  }
+
+  // Redirect to login page which will set localStorage and redirect to account
+  // This ensures localStorage is set properly on the client side
+  const encodedCustomer = encodeURIComponent(JSON.stringify(customerData))
+  return NextResponse.redirect(`${origin}/store/${slug}/login?customer_data=${encodedCustomer}&redirect=/store/${slug}/account`)
 }
