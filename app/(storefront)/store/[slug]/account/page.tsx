@@ -65,6 +65,7 @@ export default function StoreAccountPage() {
 
   useEffect(() => {
     // Handle OAuth callback - check for customer_data from server callback
+    // This MUST be checked first before fetchData() to prevent redirect loop
     const oauthSuccess = searchParams.get('oauth_success')
     const customerDataParam = searchParams.get('customer_data')
     
@@ -97,13 +98,14 @@ export default function StoreAccountPage() {
         fetchOrders(customerData.id)
         
         setLoading(false)
-        return
+        return  // Exit early - OAuth handled successfully
       } catch (err) {
         console.error('[Account] Error parsing OAuth customer data:', err)
+        // Fall through to normal flow if OAuth parsing fails
       }
     }
     
-    // Normal flow - fetch data from localStorage and database
+    // Normal flow - only run if not handling OAuth callback
     fetchData()
   }, [slug, searchParams])
 

@@ -38,10 +38,8 @@ function StoreLoginContent() {
   })
 
   useEffect(() => {
-    fetchImporter()
-    
-    // Handle OAuth callback - check for customer_data from server callback
-    // This handles the case where OAuthHandler might not process in time
+    // Handle OAuth callback FIRST - before any other operations
+    // This prevents race conditions where importer fetch might fail/redirect
     const customerDataParam = searchParams.get('customer_data')
     const redirectTo = searchParams.get('redirect')
     const errorParam = searchParams.get('error')
@@ -69,12 +67,16 @@ function StoreLoginContent() {
         // Use replace to avoid adding callback URL to history
         window.history.replaceState({}, '', `${window.location.pathname}`)
         router.push(targetUrl)
-        return
+        return  // Exit early - OAuth handled successfully
       } catch (err) {
         console.error('[Login] Error parsing customer data:', err)
         setError('Failed to complete sign in. Please try again.')
+        // Fall through to normal flow if OAuth parsing fails
       }
     }
+    
+    // Only fetch importer if not handling OAuth callback
+    fetchImporter()
   }, [slug, searchParams, router])
 
 
