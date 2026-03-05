@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils/format'
@@ -31,9 +31,11 @@ interface Order {
 export default function StoreAccountPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const slug = params.slug as string
   const supabase = useMemo(() => createClient(), [])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const hasProcessedOAuthRef = useRef(false)
   
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -62,8 +64,65 @@ export default function StoreAccountPage() {
   }
 
   useEffect(() => {
+    // Handle OAuth callback - check for customer_data from server callback
+    const oauthSuccess = searchParams.get('oauth_success')
+    const customerDataParam = searchParams.get('customer_data')
+    
+    if (oauthSuccess === 'true' && customerDataParam && !hasProcessedOAuthRef.current) {
+      hasProcessedOAuthRef.current = true
+      try {
+        const customerData = JSON.parse(decodeURIComponent(customerDataParam))
+        console.log('[Account] Received OAuth customer data:', customerData)
+        
+        // Store in localStorage
+        localStorage.setItem(`customer_${slug}`, JSON.stringify(customerData))
+        
+        // Clear URL params to prevent re-processing on refresh
+        const cleanUrl = window.location.pathname
+        window.history.replaceState({}, '', cleanUrl)
+        
+        // Set customer from OAuth data
+        setCustomer(customerData as StoreCustomer)
+        
+        // Initialize form data
+        setFormData({
+          name: customerData.name || '',
+          email: customerData.email || '',
+          phone: customerData.phone || '',
+          address: customerData.address || '',
+          city: customerData.city || '',
+        })
+        
+        // Fetch orders for this customer
+        fetchOrders(customerData.id)
+        
+        setLoading(false)
+        return
+      } catch (err) {
+        console.error('[Account] Error parsing OAuth customer data:', err)
+      }
+    }
+    
+    // Normal flow - fetch data from localStorage and database
     fetchData()
-  }, [slug])
+  }, [slug, searchParams])
+
+  const fetchOrders = async (customerId: string) => {
+    try {
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('id, order_number, status, payment_status, total_amount, created_at')
+        .eq('customer_id', customerId)
+        .order('created_at', { ascending: false })
+        .limit(10)
+
+      if (ordersData) {
+        setOrders(ordersData as Order[])
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -91,28 +150,43 @@ export default function StoreAccountPage() {
       }
 
       const customerData = JSON.parse(customerSession) as StoreCustomer
-      setCustomer(customerData)
+      
+      // Verify customer still exists in database
+      const { data: verifiedCustomer, error: verifyError } = await supabase
+        .from('store_customers')
+        .select('*')
+        .eq('id', customerData.id)
+        .eq('importer_id', customerData.importer_id)
+        .single()
+      
+      if (verifyError || !verifiedCustomer) {
+        console.error('[Account] Customer not found in database:', verifyError)
+        // Customer doesn't exist anymore, clear localStorage and redirect to login
+        localStorage.removeItem(`customer_${slug}`)
+        router.push(`/store/${slug}/login?redirect=/store/${slug}/account&error=account_not_found`)
+        return
+      }
+      
+      // Check if customer is active
+      if (!verifiedCustomer.is_active) {
+        localStorage.removeItem(`customer_${slug}`)
+        router.push(`/store/${slug}/login?redirect=/store/${slug}/account&error=account_deactivated`)
+        return
+      }
+
+      setCustomer(verifiedCustomer as StoreCustomer)
       
       // Initialize form data
       setFormData({
-        name: customerData.name || '',
-        email: customerData.email || '',
-        phone: customerData.phone || '',
-        address: customerData.address || '',
-        city: customerData.city || '',
+        name: verifiedCustomer.name || '',
+        email: verifiedCustomer.email || '',
+        phone: verifiedCustomer.phone || '',
+        address: verifiedCustomer.address || '',
+        city: verifiedCustomer.city || '',
       })
 
       // Fetch customer orders
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('id, order_number, status, payment_status, total_amount, created_at')
-        .eq('customer_id', customerData.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (ordersData) {
-        setOrders(ordersData as Order[])
-      }
+      await fetchOrders(verifiedCustomer.id)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {

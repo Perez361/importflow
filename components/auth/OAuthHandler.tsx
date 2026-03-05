@@ -21,92 +21,97 @@ export function OAuthHandler() {
     
     const code = searchParams.get('code')
     const currentPath = window.location.pathname
+    
     console.log('[OAuthHandler] Code detected:', code ? 'YES' : 'NO')
     console.log('[OAuthHandler] Current path:', currentPath)
     
-    // Only process if we're on a valid callback path
-    // Must be either /store/{slug}/auth/callback or /auth/callback
-    const isValidCallbackPath = currentPath.includes('/store/') && currentPath.includes('/auth/callback') ||
-                                currentPath === '/auth/callback' ||
-                                currentPath === '/admin/auth/callback'
+    // Check if this is a store-specific callback path
+    // Store callbacks are handled by the server route, not this client handler
+    // Skip processing if we're on a store auth callback path
+    const isStoreCallback = currentPath.startsWith('/store/') && 
+      (currentPath.includes('/auth/callback') || currentPath.includes('/login') || currentPath.includes('/register'))
     
-    if (!isValidCallbackPath) {
-      console.log('[OAuthHandler] Not a valid callback path, skipping')
+    if (isStoreCallback) {
+      console.log('[OAuthHandler] Skipping - store-specific callback path handled by server')
       return
     }
     
-    if (code) {
-      hasProcessedRef.current = true
-      setIsProcessing(true)
-      
-      // Get slug from multiple sources (in order of priority):
-      let slug: string | null = null
-      let callbackUrl: string | null = null
-      
-      // 1. OAuth state parameter - Supabase explicitly preserves this!
-      const stateParam = searchParams.get('state')
-      if (stateParam) {
-        try {
-          const stateData = JSON.parse(atob(stateParam))
-          slug = stateData.slug
-          callbackUrl = stateData.callback
-          console.log('[OAuthHandler] State data:', stateData)
-        } catch (err) {
-          console.error('[OAuthHandler] Failed to parse state:', err)
-        }
-      }
-      
-      // 2. URL hash fragment
-      if (!slug) {
-        const hash = window.location.hash
-        if (hash && hash.startsWith('#')) {
-          const hashParams = new URLSearchParams(hash.substring(1))
-          slug = hashParams.get('slug')
-          console.log('[OAuthHandler] Slug from hash:', slug)
-        }
-      }
-      
-      // 3. sessionStorage
-      if (!slug) {
-        slug = sessionStorage.getItem('oauth_slug')
-        console.log('[OAuthHandler] Slug from sessionStorage:', slug)
-      }
-      
-      // 4. localStorage
-      if (!slug) {
-        slug = localStorage.getItem('oauth_slug')
-        console.log('[OAuthHandler] Slug from localStorage:', slug)
-      }
-      
-      // 5. Extract from URL path for /store/{slug}/auth/callback
-      if (!slug) {
-        const pathMatch = currentPath.match(/\/store\/([^/]+)\/auth\/callback/)
-        if (pathMatch) {
-          slug = pathMatch[1]
-          console.log('[OAuthHandler] Slug from URL path:', slug)
-        }
-      }
-      
-      // 6. query param (fallback)
-      if (!slug) {
-        slug = searchParams.get('slug')
-        console.log('[OAuthHandler] Slug from query:', slug)
-      }
-      
-      if (!slug) {
-        console.error('[OAuthHandler] No slug found!')
-        setError('Unable to determine which store to sign in to. Please try again.')
-        setIsProcessing(false)
-        return
-      }
-      
-      // Use callback from state if available
-      const redirectUrl = callbackUrl || `/store/${slug}/account`
-      console.log('[OAuthHandler] Using redirect URL:', redirectUrl)
-      
-      // Handle the OAuth exchange
-      handleOAuthExchange(code, slug, redirectUrl)
+    // Only process if there's an OAuth code
+    if (!code) {
+      return
     }
+    
+    // Mark as processed to prevent double processing
+    hasProcessedRef.current = true
+    setIsProcessing(true)
+    
+    // Get slug from multiple sources (in order of priority):
+    let slug: string | null = null
+    let callbackUrl: string | null = null
+    
+    // 1. OAuth state parameter - Supabase explicitly preserves this!
+    const stateParam = searchParams.get('state')
+    if (stateParam) {
+      try {
+        const stateData = JSON.parse(atob(stateParam))
+        slug = stateData.slug
+        callbackUrl = stateData.callback
+        console.log('[OAuthHandler] State data:', stateData)
+      } catch (err) {
+        console.error('[OAuthHandler] Failed to parse state:', err)
+      }
+    }
+    
+    // 2. URL hash fragment
+    if (!slug) {
+      const hash = window.location.hash
+      if (hash && hash.startsWith('#')) {
+        const hashParams = new URLSearchParams(hash.substring(1))
+        slug = hashParams.get('slug')
+        console.log('[OAuthHandler] Slug from hash:', slug)
+      }
+    }
+    
+    // 3. sessionStorage
+    if (!slug) {
+      slug = sessionStorage.getItem('oauth_slug')
+      console.log('[OAuthHandler] Slug from sessionStorage:', slug)
+    }
+    
+    // 4. localStorage
+    if (!slug) {
+      slug = localStorage.getItem('oauth_slug')
+      console.log('[OAuthHandler] Slug from localStorage:', slug)
+    }
+    
+    // 5. Extract from URL path (only for non-store paths)
+    if (!slug && !currentPath.startsWith('/store/')) {
+      const pathMatch = currentPath.match(/\/store\/([^/]+)/)
+      if (pathMatch) {
+        slug = pathMatch[1]
+        console.log('[OAuthHandler] Slug from URL path:', slug)
+      }
+    }
+    
+    // 6. query param (fallback)
+    if (!slug) {
+      slug = searchParams.get('slug')
+      console.log('[OAuthHandler] Slug from query:', slug)
+    }
+    
+    if (!slug) {
+      console.error('[OAuthHandler] No slug found!')
+      setError('Unable to determine which store to sign in to. Please try again.')
+      setIsProcessing(false)
+      return
+    }
+    
+    // Use callback from state if available
+    const redirectUrl = callbackUrl || `/store/${slug}/account`
+    console.log('[OAuthHandler] Using redirect URL:', redirectUrl)
+    
+    // Handle the OAuth exchange
+    handleOAuthExchange(code, slug, redirectUrl)
   }, [searchParams, router])
 
   async function handleOAuthExchange(code: string, slug: string, redirectUrl: string) {
@@ -114,6 +119,13 @@ export function OAuthHandler() {
       console.log('[OAuthHandler] Starting OAuth exchange for slug:', slug)
       
       const supabase = createClient()
+      
+      if (!supabase) {
+        console.error('[OAuthHandler] Failed to create Supabase client')
+        setError('Failed to initialize authentication. Please try again.')
+        setIsProcessing(false)
+        return
+      }
       
       // Exchange the code for a session
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
@@ -161,6 +173,7 @@ export function OAuthHandler() {
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
           phone: user.user_metadata?.phone || null,
           avatar_url: user.user_metadata?.avatar_url || null,
+          is_active: true,
         }, {
           onConflict: 'importer_id, auth_id'
         })
@@ -242,3 +255,4 @@ export function OAuthHandler() {
 
   return null
 }
+

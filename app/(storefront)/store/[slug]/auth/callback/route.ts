@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
@@ -14,12 +14,12 @@ export async function GET(request: Request) {
     slug = pathParts[storeIndex + 1]
   }
   
-  console.log('Store callback - pathname:', pathname)
-  console.log('Store callback - extracted slug:', slug)
-  console.log('Store callback - code:', !!code)
+  console.log('[Store Callback] pathname:', pathname)
+  console.log('[Store Callback] extracted slug:', slug)
+  console.log('[Store Callback] code:', !!code)
 
   if (!code || !slug) {
-    console.error('Missing code or slug - code:', !!code, 'slug:', slug)
+    console.error('[Store Callback] Missing code or slug - code:', !!code, 'slug:', slug)
     return NextResponse.redirect(`${origin}/?error=invalid_callback`)
   }
 
@@ -33,41 +33,47 @@ export async function GET(request: Request) {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: CookieOptions) {
           cookieStore.set({ name, value, ...options })
         },
-        remove(name: string, options: any) {
+        remove(name: string, options: CookieOptions) {
           cookieStore.delete({ name, ...options })
         },
       },
     }
   )
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  // Exchange code for session
+  const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
-  if (error) {
-    console.error('Error exchanging code for session:', error)
-    return NextResponse.redirect(`${origin}/store/${slug}/login?error=auth_failed`)
+  if (exchangeError) {
+    console.error('[Store Callback] Error exchanging code for session:', exchangeError)
+    return NextResponse.redirect(`${origin}/store/${slug}/login?error=auth_failed&message=${encodeURIComponent(exchangeError.message)}`)
   }
 
   // Get the authenticated user
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
+    console.error('[Store Callback] No user found after exchange')
     return NextResponse.redirect(`${origin}/store/${slug}/login?error=no_user`)
   }
 
+  console.log('[Store Callback] User authenticated:', user.email)
+
   // Get the importer (store) by slug
-  const { data: importer } = await supabase
+  const { data: importer, error: importerError } = await supabase
     .from('importers')
     .select('id')
     .eq('slug', slug)
     .single()
 
-  if (!importer) {
-    console.error('Importer not found for slug:', slug)
+  if (importerError || !importer) {
+    console.error('[Store Callback] Importer not found for slug:', slug, importerError)
     return NextResponse.redirect(`${origin}/store/${slug}/login?error=store_not_found`)
   }
+
+  console.log('[Store Callback] Importer found:', importer.id)
 
   // Create or update store customer record
   const { data: customer, error: customerError } = await supabase
@@ -76,9 +82,10 @@ export async function GET(request: Request) {
       importer_id: importer.id,
       auth_id: user.id,
       email: user.email || '',
-      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
+      name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
       phone: user.user_metadata?.phone || null,
       avatar_url: user.user_metadata?.avatar_url || null,
+      is_active: true,
     }, {
       onConflict: 'importer_id, auth_id'
     })
@@ -86,24 +93,31 @@ export async function GET(request: Request) {
     .single()
 
   if (customerError) {
-    console.error('Error creating customer:', customerError)
+    console.error('[Store Callback] Error creating customer:', customerError)
     // Continue anyway, as the user is authenticated
   }
 
-  // Encode customer data to pass in URL
+  console.log('[Store Callback] Customer created/updated:', customer?.id)
+
+  // Encode customer data to pass in URL for client-side localStorage
   const customerData = {
     id: customer?.id,
     auth_id: user.id,
-    name: customer?.name || user.email?.split('@')[0] || 'Customer',
+    name: customer?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
     email: customer?.email || user.email || '',
-    phone: customer?.phone,
-    address: customer?.address,
-    city: customer?.city,
+    phone: customer?.phone || user.user_metadata?.phone || null,
+    address: customer?.address || null,
+    city: customer?.city || null,
     importer_id: importer.id
   }
 
-  // Redirect to login page which will set localStorage and redirect to account
-  // This ensures localStorage is set properly on the client side
   const encodedCustomer = encodeURIComponent(JSON.stringify(customerData))
-  return NextResponse.redirect(`${origin}/store/${slug}/login?customer_data=${encodedCustomer}&redirect=/store/${slug}/account`)
+
+  // Redirect directly to account page instead of going through login page
+  // This is more reliable and faster
+  const redirectUrl = `${origin}/store/${slug}/account?oauth_success=true&customer_data=${encodedCustomer}`
+  
+  console.log('[Store Callback] Redirecting to:', redirectUrl)
+  
+  return NextResponse.redirect(redirectUrl)
 }

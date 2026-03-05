@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, Suspense } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
@@ -21,6 +21,7 @@ function GoogleIcon({ className }: { className?: string }) {
 function StoreLoginContent() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const slug = params.slug as string
   const supabase = useMemo(() => createClient(), [])
   
@@ -39,24 +40,42 @@ function StoreLoginContent() {
   useEffect(() => {
     fetchImporter()
     
-    // Check for customer_data from OAuth callback
+    // Handle OAuth callback - check for customer_data from server callback
+    // This handles the case where OAuthHandler might not process in time
     const customerDataParam = searchParams.get('customer_data')
     const redirectTo = searchParams.get('redirect')
+    const errorParam = searchParams.get('error')
+    const errorMessage = searchParams.get('message')
+    
+    if (errorParam) {
+      if (errorMessage) {
+        setError(decodeURIComponent(errorMessage))
+      } else {
+        setError('Authentication failed. Please try again.')
+      }
+    }
     
     if (customerDataParam) {
       try {
         const customerData = JSON.parse(decodeURIComponent(customerDataParam))
+        console.log('[Login] Received customer data from OAuth:', customerData)
+        
+        // Store in localStorage
         localStorage.setItem(`customer_${slug}`, JSON.stringify(customerData))
         
-        // Clear the query params and redirect
+        // Clear URL params and redirect
         const targetUrl = redirectTo || `/store/${slug}/account`
-        window.location.href = targetUrl
+        
+        // Use replace to avoid adding callback URL to history
+        window.history.replaceState({}, '', `${window.location.pathname}`)
+        router.push(targetUrl)
         return
       } catch (err) {
-        console.error('Error parsing customer data:', err)
+        console.error('[Login] Error parsing customer data:', err)
+        setError('Failed to complete sign in. Please try again.')
       }
     }
-  }, [slug, searchParams])
+  }, [slug, searchParams, router])
 
 
   const fetchImporter = async () => {

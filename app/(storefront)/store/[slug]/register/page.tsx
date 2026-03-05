@@ -119,6 +119,20 @@ export default function RegisterPage() {
     }
   }
 
+  // Check for OAuth callback error in URL
+  useEffect(() => {
+    const errorParam = searchParams.get('error')
+    const errorMessage = searchParams.get('message')
+    
+    if (errorParam) {
+      if (errorMessage) {
+        setError(decodeURIComponent(errorMessage))
+      } else {
+        setError('Authentication failed. Please try again.')
+      }
+    }
+  }, [searchParams])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
