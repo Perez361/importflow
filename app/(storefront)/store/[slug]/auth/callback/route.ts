@@ -73,6 +73,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   console.log('[Store Callback] Importer found:', importer.id)
 
   // Create or update store customer record
+  // First try to insert directly (not upsert) to see if customer exists
+  const { data: existingCustomer } = await supabase
+    .from('store_customers')
+    .select('*')
+    .eq('importer_id', importer.id)
+    .eq('auth_id', user.id)
+    .single()
+
+  if (existingCustomer) {
+    console.log('[Store Callback] Customer already exists:', existingCustomer.id)
+  }
+
+  // Now try upsert
   const { data: customer, error: customerError } = await supabase
     .from('store_customers')
     .upsert({
@@ -89,17 +102,20 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .select()
     .single()
 
+  console.log('[Store Callback] Upsert result:', { customer, customerError })
+
   // If upsert failed or didn't return data, fetch the customer
   let finalCustomer = customer
   if (customerError || !finalCustomer) {
     console.log('[Store Callback] Fetching existing customer after upsert')
-    const { data: fetchedCustomer } = await supabase
+    const { data: fetchedCustomer, error: fetchError } = await supabase
       .from('store_customers')
       .select('*')
       .eq('importer_id', importer.id)
       .eq('auth_id', user.id)
       .single()
     
+    console.log('[Store Callback] Fetch result:', { fetchedCustomer, fetchError })
     finalCustomer = fetchedCustomer
   }
 
