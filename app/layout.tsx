@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { Suspense } from "react";
+import { RootOAuthHandler } from "@/components/auth/RootOAuthHandler";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -61,6 +63,9 @@ export default function RootLayout({
           <div className="gradient-orb gradient-orb-3 bottom-[20%] left-[20%]" />
         </div>
         
+        <Suspense fallback={null}>
+          <RootOAuthHandler />
+        </Suspense>
         {children}
         <Analytics />
       </body>
