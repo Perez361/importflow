@@ -20,27 +20,26 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.redirect(`${origin}/?error=invalid_callback`)
   }
 
-  const cookieStore = await cookies()
-
+  // Create a server client WITHOUT cookie handling to avoid overwriting importer sessions
+  // This prevents session conflicts between dashboard and storefront users
+  // Storefront customers only use localStorage, not Supabase auth cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return []
         },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.delete({ name, ...options })
+        setAll() {
+          // Do nothing - don't set any cookies for storefront customers
+          // This prevents overwriting the importer's session
         },
       },
     }
   )
 
-  // Exchange code for session
+  // Exchange code for session to get user info (but don't set cookies)
   const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
   if (exchangeError) {
@@ -150,3 +149,4 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   
   return NextResponse.redirect(redirectUrl)
 }
+

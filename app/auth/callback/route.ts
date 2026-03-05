@@ -62,20 +62,20 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?error=no_slug`)
   }
 
+  // Create a server client WITHOUT cookie handling to avoid overwriting importer sessions
+  // This prevents session conflicts between dashboard and storefront users
+  // Storefront customers only use localStorage, not Supabase auth cookies
   const supabase = createServerClient(
-
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return []
         },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options })
-        },
-        remove(name: string, options: any) {
-          cookieStore.delete({ name, ...options })
+        setAll() {
+          // Do nothing - don't set any cookies for storefront customers
+          // This prevents overwriting the importer's session
         },
       },
     }
@@ -131,3 +131,4 @@ export async function GET(request: Request) {
   // Redirect to account page
   return NextResponse.redirect(`${origin}/store/${slug}/account?success=true`)
 }
+
