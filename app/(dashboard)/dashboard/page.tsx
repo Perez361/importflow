@@ -1,7 +1,10 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/hooks/use-auth'
-import { formatCurrency } from '@/lib/utils/format'
+import { formatCurrency, formatDate, formatRelativeTime } from '@/lib/utils/format'
+import { createClient } from '@/lib/supabase/client'
+import type { Order, Product, Customer } from '@/types/database'
 import {
   DollarSign,
   Package,
@@ -101,56 +104,99 @@ function LowStockRow({
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
+  const supabase = createClient()
+  
+  // Dashboard data state
+  const [orders, setOrders] = useState<Order[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock data - in production, this would come from the database
+  const fetchDashboardData = useCallback(async () => {
+    if (!user?.profile?.importer_id) return
+    
+    setLoading(true)
+    try {
+      // Fetch recent orders
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('importer_id', user.profile.importer_id)
+        .order('created_at', { ascending: false })
+        .limit(10)
+      
+      if (ordersData) {
+        setOrders(ordersData as Order[])
+      }
+
+      // Fetch all products (for stats)
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('*')
+        .eq('importer_id', user.profile.importer_id)
+      
+      if (productsData) {
+        setProducts(productsData as Product[])
+      }
+
+      // Fetch customers
+      const { data: customersData } = await supabase
+        .from('customers')
+        .select('*')
+        .eq('importer_id', user.profile.importer_id)
+        .order('created_at', { ascending: false })
+        .limit(10)
+      
+      if (customersData) {
+        setCustomers(customersData as Customer[])
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [user?.profile?.importer_id, supabase])
+
+  useEffect(() => {
+    if (!authLoading && user?.profile?.importer_id) {
+      fetchDashboardData()
+    }
+  }, [user, authLoading, fetchDashboardData])
+
+  // Calculate stats from real data
   const stats = {
-    totalRevenue: 125000,
-    revenueChange: '+12.5%',
-    totalOrders: 156,
+    totalRevenue: orders
+      .filter(o => o.payment_status === 'paid' || o.payment_status === 'partial')
+      .reduce((sum, o) => sum + o.total, 0),
+    revenueChange: '+12.5%', // TODO: Calculate from historical data
+    totalOrders: orders.length,
     ordersChange: '+8.2%',
-    totalProducts: 89,
+    totalProducts: products.length,
     productsChange: '+3',
-    totalCustomers: 234,
+    totalCustomers: customers.length,
     customersChange: '+15.3%',
   }
 
-  const recentOrders = [
-    {
-      orderNumber: 'ORD-001',
-      customer: 'John Doe',
-      amount: formatCurrency(1250),
-      status: 'delivered',
-      date: '2 hours ago',
-    },
-    {
-      orderNumber: 'ORD-002',
-      customer: 'Jane Smith',
-      amount: formatCurrency(890),
-      status: 'processing',
-      date: '5 hours ago',
-    },
-    {
-      orderNumber: 'ORD-003',
-      customer: 'Bob Johnson',
-      amount: formatCurrency(2100),
-      status: 'pending',
-      date: '1 day ago',
-    },
-    {
-      orderNumber: 'ORD-004',
-      customer: 'Alice Brown',
-      amount: formatCurrency(450),
-      status: 'shipped',
-      date: '1 day ago',
-    },
-  ]
+  // Get recent orders for display
+  const recentOrders = orders.slice(0, 5).map(order => ({
+    orderNumber: order.order_number,
+    customer: 'Customer', // TODO: Join with customers table
+    amount: formatCurrency(order.total),
+    status: order.status,
+    date: formatRelativeTime(order.created_at),
+  }))
 
-  const lowStockProducts = [
-    { name: 'Product A', sku: 'SKU-001', quantity: 3, threshold: 5 },
-    { name: 'Product B', sku: 'SKU-002', quantity: 2, threshold: 10 },
-    { name: 'Product C', sku: 'SKU-003', quantity: 5, threshold: 10 },
-  ]
+  // Get low stock products
+  const lowStockProducts = products
+    .filter(p => p.quantity <= p.low_stock_threshold)
+    .slice(0, 5)
+    .map(p => ({
+      name: p.name,
+      sku: p.sku || 'N/A',
+      quantity: p.quantity,
+      threshold: p.low_stock_threshold,
+    }))
 
   const statusConfig: Record<string, { bg: string; text: string }> = {
     pending: { bg: 'bg-yellow-100 dark:bg-yellow-900/20', text: 'text-yellow-700 dark:text-yellow-400' },
@@ -159,6 +205,18 @@ export default function DashboardPage() {
     shipped: { bg: 'bg-indigo-100 dark:bg-indigo-900/20', text: 'text-indigo-700 dark:text-indigo-400' },
     delivered: { bg: 'bg-green-100 dark:bg-green-900/20', text: 'text-green-700 dark:text-green-400' },
     cancelled: { bg: 'bg-red-100 dark:bg-red-900/20', text: 'text-red-700 dark:text-red-400' },
+  }
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (!user.auth) {
+    return null
   }
 
   return (
@@ -240,76 +298,88 @@ export default function DashboardPage() {
           <div className="mt-3 md:mt-4 -mx-4 md:mx-0">
             {/* Mobile card view */}
             <div className="md:hidden space-y-2">
-              {recentOrders.map((order) => {
-                const config = statusConfig[order.status] || statusConfig.pending
-                return (
-                  <div key={order.orderNumber} className="p-3 border-b border-border last:border-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-foreground text-sm">{order.orderNumber}</span>
-                      <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
-                        {order.status}
-                      </span>
+              {recentOrders.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  No orders yet
+                </div>
+              ) : (
+                recentOrders.map((order) => {
+                  const config = statusConfig[order.status] || statusConfig.pending
+                  return (
+                    <div key={order.orderNumber} className="p-3 border-b border-border last:border-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-foreground text-sm">{order.orderNumber}</span>
+                        <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{order.customer}</span>
+                        <span className="font-medium text-foreground">{order.amount}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                        <span>{order.date}</span>
+                        <Link href="/orders" className="p-1 rounded text-muted-foreground hover:text-foreground">
+                          <ArrowUpRight className="h-3 w-3" />
+                        </Link>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{order.customer}</span>
-                      <span className="font-medium text-foreground">{order.amount}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-                      <span>{order.date}</span>
-                      <button className="p-1 rounded text-muted-foreground hover:text-foreground">
-                        <ArrowUpRight className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
             
             {/* Desktop table view */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-sm text-muted-foreground">
-                    <th className="pb-3 px-4 md:px-6 font-medium">Order</th>
-                    <th className="pb-3 px-4 md:px-6 font-medium">Customer</th>
-                    <th className="pb-3 px-4 md:px-6 font-medium">Amount</th>
-                    <th className="pb-3 px-4 md:px-6 font-medium">Status</th>
-                    <th className="pb-3 px-4 md:px-6 font-medium">Date</th>
-                    <th className="pb-3 px-4 md:px-6 font-medium text-right sr-only">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentOrders.map((order) => {
-                    const config = statusConfig[order.status] || statusConfig.pending
-                    return (
-                      <tr key={order.orderNumber} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
-                        <td className="py-3 md:py-4 px-4 md:px-6">
-                          <span className="font-medium text-foreground whitespace-nowrap text-sm">
-                            {order.orderNumber}
-                          </span>
-                        </td>
-                        <td className="py-3 md:py-4 px-4 md:px-6 text-muted-foreground whitespace-nowrap text-sm">{order.customer}</td>
-                        <td className="py-3 md:py-4 px-4 md:px-6 text-foreground font-medium whitespace-nowrap text-sm">
-                          {order.amount}
-                        </td>
-                        <td className="py-3 md:py-4 px-4 md:px-6 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-0.5 md:py-1 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="py-3 md:py-4 px-4 md:px-6 text-muted-foreground text-xs md:text-sm whitespace-nowrap">
-                          {order.date}
-                        </td>
-                        <td className="py-3 md:py-4 px-4 md:px-6 text-right">
-                          <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                            <ArrowUpRight className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+              {recentOrders.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  No orders yet
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="text-left text-sm text-muted-foreground">
+                      <th className="pb-3 px-4 md:px-6 font-medium">Order</th>
+                      <th className="pb-3 px-4 md:px-6 font-medium">Customer</th>
+                      <th className="pb-3 px-4 md:px-6 font-medium">Amount</th>
+                      <th className="pb-3 px-4 md:px-6 font-medium">Status</th>
+                      <th className="pb-3 px-4 md:px-6 font-medium">Date</th>
+                      <th className="pb-3 px-4 md:px-6 font-medium text-right sr-only">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentOrders.map((order) => {
+                      const config = statusConfig[order.status] || statusConfig.pending
+                      return (
+                        <tr key={order.orderNumber} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                          <td className="py-3 md:py-4 px-4 md:px-6">
+                            <span className="font-medium text-foreground whitespace-nowrap text-sm">
+                              {order.orderNumber}
+                            </span>
+                          </td>
+                          <td className="py-3 md:py-4 px-4 md:px-6 text-muted-foreground whitespace-nowrap text-sm">{order.customer}</td>
+                          <td className="py-3 md:py-4 px-4 md:px-6 text-foreground font-medium whitespace-nowrap text-sm">
+                            {order.amount}
+                          </td>
+                          <td className="py-3 md:py-4 px-4 md:px-6 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-0.5 md:py-1 text-xs font-medium rounded-full ${config.bg} ${config.text}`}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="py-3 md:py-4 px-4 md:px-6 text-muted-foreground text-xs md:text-sm whitespace-nowrap">
+                            {order.date}
+                          </td>
+                          <td className="py-3 md:py-4 px-4 md:px-6 text-right">
+                            <Link href="/orders" className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                              <ArrowUpRight className="h-4 w-4" />
+                            </Link>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         </div>
@@ -333,9 +403,15 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="mt-3 md:mt-4">
-            {lowStockProducts.map((product) => (
-              <LowStockRow key={product.sku} {...product} />
-            ))}
+            {lowStockProducts.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">
+                All products are well-stocked
+              </div>
+            ) : (
+              lowStockProducts.map((product) => (
+                <LowStockRow key={product.sku} {...product} />
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -375,3 +451,4 @@ export default function DashboardPage() {
     </div>
   )
 }
+

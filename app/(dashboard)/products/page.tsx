@@ -15,7 +15,46 @@ import {
   AlertTriangle,
   MoreVertical,
   Filter,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
+
+// Pagination component
+function Pagination({ 
+  currentPage, 
+  totalPages, 
+  onPageChange 
+}: { 
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          Page {currentPage} of {totalPages}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function ProductsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -24,28 +63,45 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('')
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
   const supabase = createClient()
+  const itemsPerPage = 10
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   const fetchProducts = useCallback(async () => {
     if (!user?.profile?.importer_id) return
     
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      // Build query with pagination
+      let query = supabase
         .from('products')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('importer_id', user.profile.importer_id)
         .order('created_at', { ascending: false })
+        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1)
+
+      if (searchQuery) {
+        query = query.ilike('name', `%${searchQuery}%`)
+      }
+      
+      if (filterCategory) {
+        query = query.eq('category', filterCategory)
+      }
+
+      const { data, error, count } = await query
 
       if (!error && data) {
         setProducts(data)
+        setTotalCount(count || 0)
       }
     } catch (error) {
       console.error('Error fetching products:', error)
     } finally {
       setLoading(false)
     }
-  }, [user?.profile?.importer_id, supabase])
+  }, [user?.profile?.importer_id, supabase, currentPage, searchQuery, filterCategory])
 
   useEffect(() => {
     if (!authLoading && user?.profile?.importer_id) {
@@ -54,6 +110,11 @@ export default function ProductsPage() {
       setLoading(false)
     }
   }, [user, authLoading, fetchProducts])
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, filterCategory])
 
   const handleDelete = async (productId: string) => {
     try {
@@ -64,6 +125,7 @@ export default function ProductsPage() {
 
       if (!error) {
         setProducts(products.filter(p => p.id !== productId))
+        setTotalCount(prev => prev - 1)
         setShowDeleteModal(null)
       }
     } catch (error) {
@@ -87,13 +149,6 @@ export default function ProductsPage() {
       console.error('Error updating product:', error)
     }
   }
-
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (product.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
-    const matchesCategory = !filterCategory || product.category === filterCategory
-    return matchesSearch && matchesCategory
-  })
 
   const categories = [...new Set(products.map(p => p.category).filter((c): c is string => Boolean(c)))]
   const lowStockCount = products.filter(p => p.quantity <= p.low_stock_threshold).length
@@ -155,7 +210,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Filters */}
+          {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2 md:gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -186,13 +241,15 @@ export default function ProductsPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
             <p className="mt-4 text-muted-foreground">Loading products...</p>
           </div>
-        ) : filteredProducts.length === 0 ? (
+        ) : products.length === 0 ? (
           <div className="p-6 md:p-8 text-center">
             <Package className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/50 mx-auto" />
             <p className="mt-4 text-muted-foreground">
-              {products.length === 0 ? 'No products yet. Add your first product!' : 'No products match your search.'}
+              {searchQuery || filterCategory 
+                ? 'No products match your filters.' 
+                : 'No products yet. Add your first product!'}
             </p>
-            {products.length === 0 && (
+            {!searchQuery && !filterCategory && (
               <Link href="/products/new" className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg transition">
                 <Plus className="h-4 w-4" />
                 Add Product
@@ -203,7 +260,7 @@ export default function ProductsPage() {
           <>
             {/* Mobile Card View */}
             <div className="md:hidden divide-y divide-border">
-              {filteredProducts.map((product) => (
+              {products.map((product) => (
                 <div key={product.id} className="p-4 space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
@@ -259,7 +316,7 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredProducts.map((product) => (
+                  {products.map((product) => (
                     <tr key={product.id} className="hover:bg-muted/50 transition-colors">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
@@ -308,6 +365,15 @@ export default function ProductsPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </>
         )}
       </div>
