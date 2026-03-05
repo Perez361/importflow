@@ -20,8 +20,20 @@ export function OAuthHandler() {
     if (hasProcessedRef.current) return
     
     const code = searchParams.get('code')
+    const currentPath = window.location.pathname
     console.log('[OAuthHandler] Code detected:', code ? 'YES' : 'NO')
-    console.log('[OAuthHandler] Current URL:', window.location.href)
+    console.log('[OAuthHandler] Current path:', currentPath)
+    
+    // Only process if we're on a valid callback path
+    // Must be either /store/{slug}/auth/callback or /auth/callback
+    const isValidCallbackPath = currentPath.includes('/store/') && currentPath.includes('/auth/callback') ||
+                                currentPath === '/auth/callback' ||
+                                currentPath === '/admin/auth/callback'
+    
+    if (!isValidCallbackPath) {
+      console.log('[OAuthHandler] Not a valid callback path, skipping')
+      return
+    }
     
     if (code) {
       hasProcessedRef.current = true
@@ -66,7 +78,16 @@ export function OAuthHandler() {
         console.log('[OAuthHandler] Slug from localStorage:', slug)
       }
       
-      // 5. query param (fallback)
+      // 5. Extract from URL path for /store/{slug}/auth/callback
+      if (!slug) {
+        const pathMatch = currentPath.match(/\/store\/([^/]+)\/auth\/callback/)
+        if (pathMatch) {
+          slug = pathMatch[1]
+          console.log('[OAuthHandler] Slug from URL path:', slug)
+        }
+      }
+      
+      // 6. query param (fallback)
       if (!slug) {
         slug = searchParams.get('slug')
         console.log('[OAuthHandler] Slug from query:', slug)
