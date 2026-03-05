@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, Suspense, useRef } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -24,7 +24,6 @@ function StoreLoginContent() {
   const router = useRouter()
   const slug = params.slug as string
   const supabase = useMemo(() => createClient(), [])
-  const popupRef = useRef<Window | null>(null)
   
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -37,38 +36,6 @@ function StoreLoginContent() {
     email: '',
     password: '',
   })
-
-  // Listen for messages from the OAuth popup
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Verify origin for security
-      if (event.origin !== window.location.origin) return
-      
-      // Check for OAuth success message
-      if (event.data?.type === 'OAUTH_SUCCESS' && event.data?.slug === slug) {
-        console.log('[Login] Received OAuth success from popup:', event.data)
-        
-        // Close the popup if it's still open
-        if (popupRef.current && !popupRef.current.closed) {
-          popupRef.current.close()
-        }
-        
-        // Store customer data in localStorage
-        const customerData = event.data.customerData
-        localStorage.setItem(`customer_${slug}`, JSON.stringify(customerData))
-        
-        // Redirect to account page
-        const redirectTo = searchParams.get('redirect') || `/store/${slug}/account`
-        router.push(redirectTo)
-      }
-    }
-    
-    window.addEventListener('message', handleMessage)
-    
-    return () => {
-      window.removeEventListener('message', handleMessage)
-    }
-  }, [slug, searchParams, router])
 
   useEffect(() => {
     // Handle OAuth callback FIRST - before any other operations
@@ -143,27 +110,22 @@ function StoreLoginContent() {
     setError(null)
   }
 
-  // Handle Google OAuth sign-in - open popup for better UX
+  // Handle Google OAuth sign-in - use traditional redirect (reliable)
   const handleGoogleSignIn = async () => {
     setError(null)
     setGoogleLoading(true)
     
     try {
-      // Store slug in localStorage so the root callback can retrieve it
-      // This is needed because Supabase redirects to Site URL, not our custom callback
-      localStorage.setItem('oauth_slug', slug)
+      // Use the store-specific callback URL
+      // The callback route will handle the code exchange and redirect
+      const callbackUrl = `${window.location.origin}/store/${slug}/auth/callback`
       
-      // Use root-level callback URL (Supabase will redirect to Site URL)
-      const callbackUrl = `${window.location.origin}/oauth-popup-callback`
-      
-      console.log('[Login] Opening OAuth popup with callback:', callbackUrl)
+      console.log('[Login] Google OAuth redirect URL:', callbackUrl)
 
-      // Get the OAuth URL from Supabase
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
-          skipBrowserRedirect: true, // Don't redirect, we'll open popup manually
         },
       })
 
@@ -171,38 +133,6 @@ function StoreLoginContent() {
         console.error('[Login] Google OAuth error:', oauthError.message)
         setError('Failed to sign in with Google. Please try again.')
         setGoogleLoading(false)
-        return
-      }
-
-      if (data?.url) {
-        // Open popup window centered on screen
-        const width = 500
-        const height = 600
-        const left = window.screenX + (window.outerWidth - width) / 2
-        const top = window.screenY + (window.outerHeight - height) / 2
-        
-        const popup = window.open(
-          data.url,
-          'Google OAuth',
-          `width=${width},height=${height},left=${left},top=${top},popup=1`
-        )
-        
-        if (!popup) {
-          setError('Popup was blocked. Please allow popups for this site and try again.')
-          setGoogleLoading(false)
-          return
-        }
-        
-        popupRef.current = popup
-        
-        // Monitor popup closure
-        const checkPopup = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkPopup)
-            setGoogleLoading(false)
-            popupRef.current = null
-          }
-        }, 500)
       }
     } catch (err) {
       console.error('[Login] Google OAuth error:', err)
