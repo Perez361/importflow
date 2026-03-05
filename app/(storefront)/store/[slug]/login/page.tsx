@@ -149,8 +149,12 @@ function StoreLoginContent() {
     setGoogleLoading(true)
     
     try {
-      // Use popup-specific callback URL
-      const callbackUrl = `${window.location.origin}/store/${slug}/auth/popup-callback`
+      // Store slug in localStorage so the root callback can retrieve it
+      // This is needed because Supabase redirects to Site URL, not our custom callback
+      localStorage.setItem('oauth_slug', slug)
+      
+      // Use root-level callback URL (Supabase will redirect to Site URL)
+      const callbackUrl = `${window.location.origin}/oauth-popup-callback`
       
       console.log('[Login] Opening OAuth popup with callback:', callbackUrl)
 
