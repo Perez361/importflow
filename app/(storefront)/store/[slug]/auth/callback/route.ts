@@ -89,22 +89,36 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .select()
     .single()
 
-  if (customerError) {
-    console.error('[Store Callback] Error creating customer:', customerError)
-    // Continue anyway, as the user is authenticated
+  // If upsert failed or didn't return data, fetch the customer
+  let finalCustomer = customer
+  if (customerError || !finalCustomer) {
+    console.log('[Store Callback] Fetching existing customer after upsert')
+    const { data: fetchedCustomer } = await supabase
+      .from('store_customers')
+      .select('*')
+      .eq('importer_id', importer.id)
+      .eq('auth_id', user.id)
+      .single()
+    
+    finalCustomer = fetchedCustomer
   }
 
-  console.log('[Store Callback] Customer created/updated:', customer?.id)
+  if (!finalCustomer) {
+    console.error('[Store Callback] Could not find or create customer')
+    return NextResponse.redirect(`${origin}/store/${slug}/login?error=customer_creation_failed`)
+  }
+
+  console.log('[Store Callback] Customer created/updated:', finalCustomer.id)
 
   // Encode customer data to pass in URL for client-side localStorage
   const customerData = {
-    id: customer?.id,
+    id: finalCustomer.id,
     auth_id: user.id,
-    name: customer?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
-    email: customer?.email || user.email || '',
-    phone: customer?.phone || user.user_metadata?.phone || null,
-    address: customer?.address || null,
-    city: customer?.city || null,
+    name: finalCustomer.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
+    email: finalCustomer.email || user.email || '',
+    phone: finalCustomer.phone || user.user_metadata?.phone || null,
+    address: finalCustomer.address || null,
+    city: finalCustomer.city || null,
     importer_id: importer.id
   }
 
