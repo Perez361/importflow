@@ -20,26 +20,28 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.redirect(`${origin}/?error=invalid_callback`)
   }
 
-  // Create a server client WITHOUT cookie handling to avoid overwriting importer sessions
-  // This prevents session conflicts between dashboard and storefront users
-  // Storefront customers only use localStorage, not Supabase auth cookies
+  const cookieStore = await cookies()
+
+  // Use standard cookie handling for OAuth to work
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return []
+        get(name: string) {
+          return cookieStore.get(name)?.value
         },
-        setAll() {
-          // Do nothing - don't set any cookies for storefront customers
-          // This prevents overwriting the importer's session
+        set(name: string, value: string, options: CookieOptions) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          cookieStore.delete({ name, ...options })
         },
       },
     }
   )
 
-  // Exchange code for session to get user info (but don't set cookies)
+  // Exchange code for session
   const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
   if (exchangeError) {
@@ -72,20 +74,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   console.log('[Store Callback] Importer found:', importer.id)
 
   // Create or update store customer record
-  // First try to insert directly (not upsert) to see if customer exists
-  const { data: existingCustomer } = await supabase
-    .from('store_customers')
-    .select('*')
-    .eq('importer_id', importer.id)
-    .eq('auth_id', user.id)
-    .single()
-
-  if (existingCustomer) {
-    console.log('[Store Callback] Customer already exists:', existingCustomer.id)
-  }
-
-  // Now try upsert - use auth_id conflict resolution (available after migration 012)
-  // Also include password_hash as null for OAuth users
   const { data: customer, error: customerError } = await supabase
     .from('store_customers')
     .upsert({
@@ -95,7 +83,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
       phone: user.user_metadata?.phone || null,
       avatar_url: user.user_metadata?.avatar_url || null,
-      password_hash: null, // OAuth users don't have password
+      password_hash: null,
       is_active: true,
     }, {
       onConflict: 'importer_id, auth_id'
@@ -122,10 +110,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!finalCustomer) {
     console.error('[Store Callback] Could not find or create customer')
+    // Sign out before redirecting
+    await supabase.auth.signOut()
     return NextResponse.redirect(`${origin}/store/${slug}/login?error=customer_creation_failed`)
   }
 
   console.log('[Store Callback] Customer created/updated:', finalCustomer.id)
+
+  // CRITICAL: Sign out the Supabase session after creating the customer
+  // This prevents session conflicts between dashboard and storefront
+  // Storefront customers only use localStorage, not Supabase auth cookies
+  await supabase.auth.signOut()
+  console.log('[Store Callback] Signed out Supabase session - customer will use localStorage only')
 
   // Encode customer data to pass in URL for client-side localStorage
   const customerData = {
@@ -141,8 +137,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const encodedCustomer = encodeURIComponent(JSON.stringify(customerData))
 
-  // Redirect directly to account page instead of going through login page
-  // This is more reliable and faster
+  // Redirect directly to account page
   const redirectUrl = `${origin}/store/${slug}/account?oauth_success=true&customer_data=${encodedCustomer}`
   
   console.log('[Store Callback] Redirecting to:', redirectUrl)

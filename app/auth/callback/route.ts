@@ -62,20 +62,19 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/?error=no_slug`)
   }
 
-  // Create a server client WITHOUT cookie handling to avoid overwriting importer sessions
-  // This prevents session conflicts between dashboard and storefront users
-  // Storefront customers only use localStorage, not Supabase auth cookies
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return []
+        get(name: string) {
+          return cookieStore.get(name)?.value
         },
-        setAll() {
-          // Do nothing - don't set any cookies for storefront customers
-          // This prevents overwriting the importer's session
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options })
+        },
+        remove(name: string, options: any) {
+          cookieStore.delete({ name, ...options })
         },
       },
     }
@@ -108,7 +107,6 @@ export async function GET(request: Request) {
   }
 
   // Create or update store customer record
-  // Include password_hash as null for OAuth users (they don't have passwords)
   const { error: customerError } = await supabase
     .from('store_customers')
     .upsert({
@@ -118,7 +116,7 @@ export async function GET(request: Request) {
       name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
       phone: user.user_metadata?.phone || null,
       avatar_url: user.user_metadata?.avatar_url || null,
-      password_hash: null, // OAuth users don't have password
+      password_hash: null,
       is_active: true,
     }, {
       onConflict: 'importer_id, auth_id'
@@ -127,6 +125,12 @@ export async function GET(request: Request) {
   if (customerError) {
     console.error('Error creating customer:', customerError)
   }
+
+  // CRITICAL: Sign out the Supabase session after creating the customer
+  // This prevents session conflicts between dashboard and storefront
+  // Storefront customers only use localStorage, not Supabase auth cookies
+  await supabase.auth.signOut()
+  console.log('Signed out Supabase session - customer will use localStorage only')
 
   // Redirect to account page
   return NextResponse.redirect(`${origin}/store/${slug}/account?success=true`)
