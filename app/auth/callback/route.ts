@@ -108,6 +108,7 @@ export async function GET(request: Request) {
   }
 
   // Create or update store customer record
+  // Include password_hash as null for OAuth users (they don't have passwords)
   const { error: customerError } = await supabase
     .from('store_customers')
     .upsert({
@@ -117,6 +118,8 @@ export async function GET(request: Request) {
       name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
       phone: user.user_metadata?.phone || null,
       avatar_url: user.user_metadata?.avatar_url || null,
+      password_hash: null, // OAuth users don't have password
+      is_active: true,
     }, {
       onConflict: 'importer_id, auth_id'
     })

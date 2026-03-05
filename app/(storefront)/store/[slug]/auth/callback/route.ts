@@ -85,7 +85,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     console.log('[Store Callback] Customer already exists:', existingCustomer.id)
   }
 
-  // Now try upsert
+  // Now try upsert - use auth_id conflict resolution (available after migration 012)
+  // Also include password_hash as null for OAuth users
   const { data: customer, error: customerError } = await supabase
     .from('store_customers')
     .upsert({
@@ -95,6 +96,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
       phone: user.user_metadata?.phone || null,
       avatar_url: user.user_metadata?.avatar_url || null,
+      password_hash: null, // OAuth users don't have password
       is_active: true,
     }, {
       onConflict: 'importer_id, auth_id'
