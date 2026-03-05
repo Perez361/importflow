@@ -1,22 +1,19 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export async function GET(request: Request) {
-  const { searchParams, origin, pathname } = new URL(request.url)
+export async function GET(request: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
+  const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   
-  // Extract slug from URL path: /store/{slug}/auth/callback
-  const pathParts = pathname.split('/').filter(Boolean)
-  const storeIndex = pathParts.indexOf('store')
-  let slug = null
-  if (storeIndex >= 0 && pathParts[storeIndex + 1]) {
-    slug = pathParts[storeIndex + 1]
-  }
+  // Get slug from params - this is the proper way in Next.js App Router
+  const { slug } = await params
   
-  console.log('[Store Callback] pathname:', pathname)
+  console.log('[Store Callback] pathname:', request.nextUrl.pathname)
   console.log('[Store Callback] extracted slug:', slug)
   console.log('[Store Callback] code:', !!code)
+  console.log('[Store Callback] origin:', origin)
 
   if (!code || !slug) {
     console.error('[Store Callback] Missing code or slug - code:', !!code, 'slug:', slug)
