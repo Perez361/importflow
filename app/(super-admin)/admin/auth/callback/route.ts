@@ -17,18 +17,53 @@ export async function GET(request: Request) {
         const { data: { user } } = await supabase.auth.getUser()
         
         if (user) {
-          const { data: profile } = await supabase
+          let profile = await supabase
             .from('users')
-            .select('role')
+            .select('role, is_active')
             .eq('id', user.id)
             .single()
           
-          // Only redirect to admin if user is super_admin
-          if (profile?.role === 'super_admin') {
+          // If profile doesn't exist, this is a new user signing up via Google OAuth
+          if (profile.error || !profile.data) {
+            console.log('Creating new user profile for OAuth user')
+            
+            // Create new user profile with super_admin role
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert({
+                id: user.id,
+                email: user.email || '',
+                full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Admin',
+                role: 'super_admin',
+                is_active: true,
+              })
+
+            if (insertError) {
+              console.error('Error creating user profile:', insertError)
+              return NextResponse.redirect(`${origin}/admin/login?error=profile_creation_failed`)
+            }
+            
+            // Fetch the newly created profile
+            profile = await supabase
+              .from('users')
+              .select('role, is_active')
+              .eq('id', user.id)
+              .single()
+          }
+          
+          const profileData = profile.data
+          
+          // Only redirect to admin if user is super_admin and active
+          if (profileData?.role === 'super_admin' && profileData?.is_active) {
             return NextResponse.redirect(`${origin}${next}`)
+          } else if (profileData?.role === 'super_admin' && !profileData?.is_active) {
+            // Super admin but account is deactivated
+            await supabase.auth.signOut()
+            return NextResponse.redirect(`${origin}/admin/login?error=account_deactivated`)
           } else {
             // Not a super admin, redirect to regular login with error
-            return NextResponse.redirect(`${origin}/login?error=not_super_admin`)
+            await supabase.auth.signOut()
+            return NextResponse.redirect(`${origin}/admin/login?error=not_super_admin`)
           }
         }
         
