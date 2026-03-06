@@ -102,6 +102,10 @@ export async function GET(request: Request) {
   // User exists - redirect based on role
   if (profile.role === 'super_admin' && profile.is_active) {
     return NextResponse.redirect(`${origin}/admin`)
+  } else if (profile.role === 'customer') {
+    // Customer role - redirect to login with message to use store login
+    // Customers should only access storefront, not dashboard
+    return NextResponse.redirect(`${origin}/login?error=customer_use_store`)
   } else if (profile.is_active) {
     return NextResponse.redirect(`${origin}/dashboard`)
   } else {

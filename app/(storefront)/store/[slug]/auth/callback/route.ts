@@ -117,6 +117,37 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   console.log('[Store Callback] Customer created/updated:', finalCustomer.id)
 
+  // Also create/update user in users table with 'customer' role
+  // This allows store customers to have a proper user record for auth purposes
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (existingUser) {
+    // User exists - check if they're already a customer or importer
+    // If they're an importer, don't change their role
+    if (existingUser.role !== 'importer' && existingUser.role !== 'super_admin') {
+      // Update to customer role if not already importer/super_admin
+      await supabase
+        .from('users')
+        .update({ role: 'customer' })
+        .eq('id', user.id)
+    }
+  } else {
+    // Create new user with customer role
+    await supabase
+      .from('users')
+      .insert({
+        id: user.id,
+        email: user.email || '',
+        full_name: finalCustomer.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
+        role: 'customer',
+        is_active: true,
+      })
+  }
+
   // CRITICAL: Sign out the Supabase session after creating the customer
   // This prevents session conflicts between dashboard and storefront
   // Storefront customers only use localStorage, not Supabase auth cookies
