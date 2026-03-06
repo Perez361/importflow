@@ -125,14 +125,16 @@ function StoreLoginContent() {
       }
 
       if (data.user) {
-        // Check if user is an importer/staff member - not allowed in storefront
+        // Check if user is an importer/super_admin - these roles cannot access storefront
+        // Customer role is allowed since they need to access their storefront account
         const { data: staffUser } = await supabase
           .from('users')
           .select('id, email, role, importer_id')
           .eq('id', data.user.id)
           .maybeSingle()
 
-        if (staffUser) {
+        // Block only importer and super_admin roles - customer role is allowed
+        if (staffUser && (staffUser.role === 'importer' || staffUser.role === 'super_admin')) {
           await supabase.auth.signOut()
           setError('Staff members cannot access the storefront. Please use the dashboard login.')
           setSubmitting(false)

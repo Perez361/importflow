@@ -28,8 +28,9 @@ WITH CHECK (id = auth.uid());
 -- Create a function to handle user registration
 -- This runs with elevated privileges to bypass RLS during registration
 -- IMPORTANT: Use public. schema prefix for all table references
+-- FIX: Check if user is a storefront customer (via metadata) and skip importer/user creation
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $$ 
 DECLARE
     business_name_val TEXT;
     full_name_val TEXT;
@@ -37,7 +38,19 @@ DECLARE
     final_slug TEXT;
     trial_end TIMESTAMPTZ;
     slug_exists BOOLEAN;
+    is_storefront_customer BOOLEAN;
+    store_slug_val TEXT;
 BEGIN
+    -- Check if this is a storefront customer registration
+    is_storefront_customer := COALESCE((NEW.raw_user_meta_data->>'is_storefront_customer')::BOOLEAN, FALSE);
+    
+    -- If this is a storefront customer, skip creating importer and user records
+    -- The storefront confirm route will handle creating the store_customer and user with 'customer' role
+    IF is_storefront_customer THEN
+        RAISE NOTICE 'Storefront customer detected - skipping importer/user creation in trigger';
+        RETURN NEW;
+    END IF;
+    
     -- Get business name and full name from user metadata
     business_name_val := COALESCE(NEW.raw_user_meta_data->>'business_name', 'My Business');
     full_name_val := COALESCE(NEW.raw_user_meta_data->>'full_name', '');
