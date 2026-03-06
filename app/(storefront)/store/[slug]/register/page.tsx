@@ -106,7 +106,7 @@ export default function RegisterPage() {
     setSubmitting(true)
 
     try {
-      const redirectUrl = `${window.location.origin}/store/${slug}/auth/callback`
+      const redirectUrl = `${window.location.origin}/store/${slug}/auth/confirm`
       
       const { data, error: authError } = await supabase.auth.signUp({
         email: formData.email,
