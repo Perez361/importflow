@@ -104,6 +104,11 @@ export default function RegisterPage() {
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
+          // Pass store context in data so callback can identify this as storefront
+          data: {
+            store_slug: slug,
+            is_storefront_customer: true,
+          },
         },
       })
 
@@ -162,6 +167,9 @@ export default function RegisterPage() {
             address: formData.address || null,
             city: formData.city || null,
             importer_id: importerId,
+            // Pass the store slug to identify this as a storefront registration
+            store_slug: slug,
+            is_storefront_customer: true,
           },
           emailRedirectTo: redirectUrl,
         },

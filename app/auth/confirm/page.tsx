@@ -51,6 +51,107 @@ function ConfirmContent() {
         }
 
         if (data.user) {
+          const user = data.user
+          console.log('[Confirm] User confirmed:', user.email)
+          console.log('[Confirm] User metadata:', user.user_metadata)
+          
+          // Check if this is a storefront registration by looking at user metadata
+          const storeSlug = user.user_metadata?.store_slug
+          const isStorefrontCustomer = user.user_metadata?.is_storefront_customer
+          const importerId = user.user_metadata?.importer_id
+          
+          if (storeSlug && isStorefrontCustomer) {
+            // This is a storefront customer - handle storefront-specific setup
+            console.log('[Confirm] Storefront customer detected, slug:', storeSlug)
+            
+            // Get the importer (store) by slug
+            const { data: importer, error: importerError } = await supabase
+              .from('importers')
+              .select('id')
+              .eq('slug', storeSlug)
+              .eq('is_active', true)
+              .single()
+
+            if (importerError || !importer) {
+              console.error('[Confirm] Importer not found for slug:', storeSlug, importerError)
+              // Still allow login but as unverified
+              setStatus('error')
+              setErrorMessage('Store not found. Please contact support.')
+              return
+            }
+
+            console.log('[Confirm] Importer found:', importer.id)
+
+            // Create store_customers record
+            const { data: customer, error: customerError } = await supabase
+              .from('store_customers')
+              .upsert({
+                importer_id: importer.id,
+                auth_id: user.id,
+                email: user.email || '',
+                name: user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
+                phone: user.user_metadata?.phone || null,
+                address: user.user_metadata?.address || null,
+                city: user.user_metadata?.city || null,
+                avatar_url: user.user_metadata?.avatar_url || null,
+                password_hash: null,
+                is_active: true,
+              }, {
+                onConflict: 'importer_id, auth_id'
+              })
+              .select()
+              .single()
+
+            if (customerError) {
+              console.error('[Confirm] Error creating store customer:', customerError)
+              // Continue anyway - we'll try to create user record
+            }
+
+            console.log('[Confirm] Store customer created/updated:', customer?.id)
+
+            // Create/update users table with 'customer' role
+            const { data: existingUser } = await supabase
+              .from('users')
+              .select('id, role')
+              .eq('id', user.id)
+              .single()
+
+            if (existingUser) {
+              // User exists - update to customer role if not already importer/super_admin
+              if (existingUser.role !== 'importer' && existingUser.role !== 'super_admin') {
+                await supabase
+                  .from('users')
+                  .update({ role: 'customer' })
+                  .eq('id', user.id)
+                console.log('[Confirm] Updated user role to customer')
+              }
+            } else {
+              // Create new user with customer role
+              await supabase
+                .from('users')
+                .insert({
+                  id: user.id,
+                  email: user.email || '',
+                  full_name: user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
+                  role: 'customer',
+                  is_active: true,
+                })
+              console.log('[Confirm] Created user with customer role')
+            }
+
+            // Sign out the Supabase session - customer will use localStorage
+            await supabase.auth.signOut()
+            console.log('[Confirm] Signed out - storefront customer will use localStorage')
+
+            // Redirect to storefront login with success
+            setStatus('success')
+            setTimeout(() => {
+              router.push(`/store/${storeSlug}/login?confirmed=true`)
+            }, 1500)
+            return
+          }
+
+          // Non-storefront user - original flow
           setStatus('success')
           
           // Redirect to dashboard or the intended page
@@ -95,7 +196,7 @@ function ConfirmContent() {
               Email Confirmed!
             </h2>
             <p className="text-zinc-500 dark:text-zinc-400">
-              Your account has been verified. Redirecting you to the dashboard...
+              Your account has been verified. Redirecting you...
             </p>
           </div>
         )}

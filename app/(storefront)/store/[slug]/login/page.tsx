@@ -29,6 +29,7 @@ function StoreLoginContent() {
   const [submitting, setSubmitting] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [importerName, setImporterName] = useState<string>('')
   const [importerId, setImporterId] = useState<string>('')
   
@@ -44,6 +45,12 @@ function StoreLoginContent() {
     const redirectTo = searchParams.get('redirect')
     const errorParam = searchParams.get('error')
     const errorMessage = searchParams.get('message')
+    const confirmedParam = searchParams.get('confirmed')
+    
+    // Show success message for email confirmation
+    if (confirmedParam === 'true') {
+      setSuccessMessage('Your email has been confirmed! Please sign in to continue.')
+    }
     
     if (errorParam) {
       if (errorMessage) {
@@ -126,6 +133,11 @@ function StoreLoginContent() {
         provider: 'google',
         options: {
           redirectTo: callbackUrl,
+          // Pass store context in data so callback can identify this as storefront
+          data: {
+            store_slug: slug,
+            is_storefront_customer: true,
+          },
         },
       })
 
@@ -263,6 +275,12 @@ function StoreLoginContent() {
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-lg mb-6">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-4 rounded-lg mb-6">
+            {successMessage}
           </div>
         )}
 

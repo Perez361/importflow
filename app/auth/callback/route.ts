@@ -50,6 +50,17 @@ export async function GET(request: Request) {
 
   console.log('OAuth callback - user:', user.email)
 
+  // Check if this is a storefront OAuth by looking at user metadata
+  // Store customers should use the store-specific callback at /store/[slug]/auth/callback
+  const storeSlug = user.user_metadata?.store_slug
+  const isStorefrontCustomer = user.user_metadata?.is_storefront_customer
+  
+  if (storeSlug && isStorefrontCustomer) {
+    // This is a storefront customer trying to use main auth - redirect to store login
+    console.log('[Auth Callback] Detected storefront customer, redirecting to store login')
+    return NextResponse.redirect(`${origin}/store/${storeSlug}/login?error=use_store_login`)
+  }
+
   // Fetch user profile - this callback handles ONLY main auth users (importers/staff)
   // Store customers should use the store-specific callback at /store/[slug]/auth/callback
   const { data: profile, error: profileError } = await supabase
