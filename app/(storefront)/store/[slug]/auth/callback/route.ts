@@ -126,14 +126,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     .single()
 
   if (existingUser) {
-    // User exists - check if they're already a customer or importer
-    // If they're an importer, don't change their role
-    if (existingUser.role !== 'importer' && existingUser.role !== 'super_admin') {
-      // Update to customer role if not already importer/super_admin
+    // User exists - update to customer role (store customers should always be customer)
+    // This ensures even existing importers get updated to customer
+    if (existingUser.role !== 'customer') {
       await supabase
         .from('users')
         .update({ role: 'customer' })
         .eq('id', user.id)
+      console.log('[Store Callback] Updated user role to customer')
     }
   } else {
     // Create new user with customer role
@@ -146,6 +146,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         role: 'customer',
         is_active: true,
       })
+    console.log('[Store Callback] Created user with customer role')
   }
 
   // CRITICAL: Sign out the Supabase session after creating the customer

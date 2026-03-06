@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
 
@@ -17,7 +17,6 @@ import {
   Menu,
   X,
 } from 'lucide-react'
-import { OAuthHandler } from '@/components/auth/OAuthHandler'
 
 const CediIcon = ({ className }: { className?: string }) => {
   return (
@@ -116,15 +115,7 @@ const benefits = [
 ]
 
 export default function LandingPage() {
-  return (
-    <>
-      <Suspense fallback={null}>
-        <OAuthHandler />
-      </Suspense>
-      
-      <LandingContent />
-    </>
-  )
+  return <LandingContent />
 }
 
 // Separate component for the landing page content
