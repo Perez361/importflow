@@ -17,19 +17,30 @@ function StoreConfirmContent() {
     const confirmEmail = async () => {
       const supabase = createClient()
       
-      // Get the hash fragment from the URL (Supabase sends tokens in hash)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const accessToken = hashParams.get('access_token')
-      const refreshToken = hashParams.get('refresh_token')
+      // Supabase sends tokens in the URL hash fragment after confirmation
+      // Format: #access_token=xxx&refresh_token=xxx&type=xxx
+      const hash = window.location.hash
+      const search = window.location.search
       
-      // Also check query params
-      const queryAccessToken = searchParams.get('access_token')
-      const queryRefreshToken = searchParams.get('refresh_token')
+      console.log('[Store Confirm] Full URL:', window.location.href)
+      console.log('[Store Confirm] Hash:', hash)
+      console.log('[Store Confirm] Search:', search)
       
-      const token = accessToken || queryAccessToken
-      const refresh = refreshToken || queryRefreshToken
+      // Parse from hash first (Supabase default)
+      let hashParams = new URLSearchParams(hash.substring(1))
+      let accessToken = hashParams.get('access_token')
+      let refreshToken = hashParams.get('refresh_token')
+      
+      // If not in hash, try query params
+      if (!accessToken) {
+        const queryParams = new URLSearchParams(search)
+        accessToken = queryParams.get('access_token')
+        refreshToken = queryParams.get('refresh_token')
+      }
 
-      if (!token) {
+      console.log('[Store Confirm] Access token found:', !!accessToken)
+
+      if (!accessToken) {
         setStatus('error')
         setErrorMessage('No authentication token found. Please try clicking the confirmation link again.')
         return
@@ -38,8 +49,8 @@ function StoreConfirmContent() {
       try {
         // Set the session using the tokens
         const { data, error } = await supabase.auth.setSession({
-          access_token: token,
-          refresh_token: refresh || '',
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
         })
 
         if (error) {
