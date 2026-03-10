@@ -193,11 +193,17 @@ function ConfirmContent() {
           <div className="text-center">
             <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-zinc-900 dark:text-white mb-2">
-              Email Confirmed!
+              Email Verified Successfully!
             </h2>
-            <p className="text-zinc-500 dark:text-zinc-400">
-              Your account has been verified. Redirecting you...
+            <p className="text-zinc-500 dark:text-zinc-400 mb-6">
+              Your account has been verified. You can now sign in.
             </p>
+            <button
+              onClick={() => router.push('/login')}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Go to Login
+            </button>
           </div>
         )}
 
