@@ -151,7 +151,52 @@ function ConfirmContent() {
             return
           }
 
-          // Non-storefront user - original flow
+          // Non-storefront user - original flow (Importer registration)
+          // Check if this is a new importer registration
+          const businessName = user.user_metadata?.business_name
+          
+          if (businessName) {
+            // This is an importer registration - create the importer record
+            console.log('[Confirm] Creating importer record for:', businessName)
+            
+            // Generate a slug from business name
+            const slug = businessName
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '-')
+              .replace(/^-|-$/g, '')
+              + '-' + Date.now().toString(36)
+            
+            // Create the importer record
+            const { data: importer, error: importerError } = await supabase
+              .from('importers')
+              .insert({
+                business_name: businessName,
+                slug: slug,
+                email: user.email || '',
+                is_active: true,
+                subscription_status: 'trial',
+              })
+              .select()
+              .single()
+
+            if (importerError) {
+              console.error('[Confirm] Error creating importer:', importerError)
+            } else {
+              console.log('[Confirm] Importer created:', importer.id)
+              
+              // Update the user record with importer_id and set role to importer
+              await supabase
+                .from('users')
+                .update({ 
+                  role: 'importer',
+                  importer_id: importer.id 
+                })
+                .eq('id', user.id)
+              
+              console.log('[Confirm] User updated with importer_id')
+            }
+          }
+          
           setStatus('success')
           
           // Redirect to dashboard or the intended page

@@ -113,7 +113,7 @@ export default function RegisterPage() {
             full_name: formData.fullName,
             business_name: formData.businessName,
           },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
         },
       })
 
