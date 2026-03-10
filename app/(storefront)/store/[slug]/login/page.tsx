@@ -26,7 +26,6 @@ function StoreLoginContent() {
 
   useEffect(() => {
     // Handle OAuth callback FIRST - before any other operations
-    // This prevents race conditions where importer fetch might fail/redirect
     const customerDataParam = searchParams.get('customer_data')
     const redirectTo = searchParams.get('redirect')
     const errorParam = searchParams.get('error')
@@ -56,15 +55,12 @@ function StoreLoginContent() {
         
         // Clear URL params and redirect
         const targetUrl = redirectTo || `/store/${slug}/account`
-        
-        // Use replace to avoid adding callback URL to history
         window.history.replaceState({}, '', `${window.location.pathname}`)
         router.push(targetUrl)
-        return  // Exit early - OAuth handled successfully
+        return
       } catch (err) {
         console.error('[Login] Error parsing customer data:', err)
         setError('Failed to complete sign in. Please try again.')
-        // Fall through to normal flow if OAuth parsing fails
       }
     }
     
@@ -126,14 +122,13 @@ function StoreLoginContent() {
 
       if (data.user) {
         // Check if user is an importer/super_admin - these roles cannot access storefront
-        // Customer role is allowed since they need to access their storefront account
         const { data: staffUser } = await supabase
           .from('users')
           .select('id, email, role, importer_id')
           .eq('id', data.user.id)
           .maybeSingle()
 
-        // Block only importer and super_admin roles - customer role is allowed
+        // Block importer and super_admin roles
         if (staffUser && (staffUser.role === 'importer' || staffUser.role === 'super_admin')) {
           await supabase.auth.signOut()
           setError('Staff members cannot access the storefront. Please use the dashboard login.')
@@ -163,6 +158,13 @@ function StoreLoginContent() {
           return
         }
 
+        // Update last login
+        await supabase
+          .from('store_customers')
+          .update({ last_login_at: new Date().toISOString() })
+          .eq('id', customer.id)
+
+        // Store customer session in localStorage (not sessionStorage to persist across tabs)
         const customerSession = {
           id: customer.id,
           auth_id: customer.auth_id,
@@ -171,7 +173,8 @@ function StoreLoginContent() {
           phone: customer.phone,
           address: customer.address,
           city: customer.city,
-          importer_id: customer.importer_id
+          importer_id: customer.importer_id,
+          avatar_url: customer.avatar_url
         }
         
         localStorage.setItem(`customer_${slug}`, JSON.stringify(customerSession))

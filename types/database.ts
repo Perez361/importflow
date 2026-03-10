@@ -68,7 +68,7 @@ export interface Database {
           email: string
           full_name: string | null
           avatar_url: string | null
-          role: string
+          role: 'super_admin' | 'importer' | 'staff'
           importer_id: string | null
           is_active: boolean
           last_login_at: string | null
@@ -76,11 +76,11 @@ export interface Database {
           updated_at: string
         }
         Insert: {
-          id?: string
+          id: string
           email: string
           full_name?: string | null
           avatar_url?: string | null
-          role?: string
+          role?: 'super_admin' | 'importer' | 'staff'
           importer_id?: string | null
           is_active?: boolean
           last_login_at?: string | null
@@ -92,8 +92,58 @@ export interface Database {
           email?: string
           full_name?: string | null
           avatar_url?: string | null
-          role?: string
+          role?: 'super_admin' | 'importer' | 'staff'
           importer_id?: string | null
+          is_active?: boolean
+          last_login_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      store_customers: {
+        Row: {
+          id: string
+          importer_id: string
+          auth_id: string | null
+          email: string
+          password_hash: string | null
+          name: string
+          phone: string | null
+          address: string | null
+          city: string | null
+          avatar_url: string | null
+          is_active: boolean
+          last_login_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          importer_id: string
+          auth_id?: string | null
+          email: string
+          password_hash?: string | null
+          name: string
+          phone?: string | null
+          address?: string | null
+          city?: string | null
+          avatar_url?: string | null
+          is_active?: boolean
+          last_login_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          importer_id?: string
+          auth_id?: string | null
+          email?: string
+          password_hash?: string | null
+          name?: string
+          phone?: string | null
+          address?: string | null
+          city?: string | null
+          avatar_url?: string | null
           is_active?: boolean
           last_login_at?: string | null
           created_at?: string
@@ -140,56 +190,6 @@ export interface Database {
           total_orders?: number
           total_spent?: number
           notes?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      store_customers: {
-        Row: {
-          id: string
-          importer_id: string
-          email: string
-          password_hash: string | null
-          name: string
-          phone: string | null
-          address: string | null
-          city: string | null
-          avatar_url: string | null
-          auth_id: string | null
-          is_active: boolean
-          last_login_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          importer_id: string
-          email: string
-          password_hash?: string | null
-          name: string
-          phone?: string | null
-          address?: string | null
-          city?: string | null
-          avatar_url?: string | null
-          auth_id?: string | null
-          is_active?: boolean
-          last_login_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          importer_id?: string
-          email?: string
-          password_hash?: string | null
-          name?: string
-          phone?: string | null
-          address?: string | null
-          city?: string | null
-          avatar_url?: string | null
-          auth_id?: string | null
-          is_active?: boolean
-          last_login_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -255,6 +255,7 @@ export interface Database {
           id: string
           importer_id: string
           customer_id: string | null
+          store_customer_id: string | null
           order_number: string
           status: string
           payment_status: string
@@ -268,6 +269,7 @@ export interface Database {
           id?: string
           importer_id: string
           customer_id?: string | null
+          store_customer_id?: string | null
           order_number: string
           status?: string
           payment_status?: string
@@ -281,6 +283,7 @@ export interface Database {
           id?: string
           importer_id?: string
           customer_id?: string | null
+          store_customer_id?: string | null
           order_number?: string
           status?: string
           payment_status?: string
@@ -390,6 +393,8 @@ export interface Database {
           quantity: number
           unit_cost: number | null
           total_cost: number | null
+          is_verified: boolean
+          verified_at: string | null
           created_at: string
         }
         Insert: {
@@ -399,6 +404,8 @@ export interface Database {
           quantity: number
           unit_cost?: number | null
           total_cost?: number | null
+          is_verified?: boolean
+          verified_at?: string | null
           created_at?: string
         }
         Update: {
@@ -408,6 +415,8 @@ export interface Database {
           quantity?: number
           unit_cost?: number | null
           total_cost?: number | null
+          is_verified?: boolean
+          verified_at?: string | null
           created_at?: string
         }
       }
@@ -417,6 +426,7 @@ export interface Database {
           importer_id: string
           order_id: string | null
           customer_id: string | null
+          store_customer_id: string | null
           amount: number
           payment_method: string | null
           reference: string | null
@@ -430,6 +440,7 @@ export interface Database {
           importer_id: string
           order_id?: string | null
           customer_id?: string | null
+          store_customer_id?: string | null
           amount: number
           payment_method?: string | null
           reference?: string | null
@@ -443,6 +454,7 @@ export interface Database {
           importer_id?: string
           order_id?: string | null
           customer_id?: string | null
+          store_customer_id?: string | null
           amount?: number
           payment_method?: string | null
           reference?: string | null
@@ -493,6 +505,99 @@ export interface Database {
           updated_at?: string
         }
       }
+      preorder_tracking: {
+        Row: {
+          id: string
+          importer_id: string
+          shipment_id: string | null
+          tracking_number: string
+          product_id: string | null
+          verified: boolean
+          verified_at: string | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          importer_id: string
+          shipment_id?: string | null
+          tracking_number: string
+          product_id?: string | null
+          verified?: boolean
+          verified_at?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          importer_id?: string
+          shipment_id?: string | null
+          tracking_number?: string
+          product_id?: string | null
+          verified?: boolean
+          verified_at?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+      }
+      conversations: {
+        Row: {
+          id: string
+          importer_id: string
+          store_customer_id: string
+          subject: string
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          importer_id: string
+          store_customer_id: string
+          subject?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          importer_id?: string
+          store_customer_id?: string
+          subject?: string
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          sender_type: 'customer' | 'importer'
+          sender_id: string
+          content: string
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          sender_type: 'customer' | 'importer'
+          sender_id: string
+          content: string
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          sender_type?: 'customer' | 'importer'
+          sender_id?: string
+          content?: string
+          is_read?: boolean
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -515,13 +620,13 @@ export type User = Database['public']['Tables']['users']['Row']
 export type UserInsert = Database['public']['Tables']['users']['Insert']
 export type UserUpdate = Database['public']['Tables']['users']['Update']
 
-export type Customer = Database['public']['Tables']['customers']['Row']
-export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
-export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
-
 export type StoreCustomer = Database['public']['Tables']['store_customers']['Row']
 export type StoreCustomerInsert = Database['public']['Tables']['store_customers']['Insert']
 export type StoreCustomerUpdate = Database['public']['Tables']['store_customers']['Update']
+
+export type Customer = Database['public']['Tables']['customers']['Row']
+export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
+export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
 
 export type Product = Database['public']['Tables']['products']['Row']
 export type ProductInsert = Database['public']['Tables']['products']['Insert']
@@ -551,26 +656,23 @@ export type Subscription = Database['public']['Tables']['subscriptions']['Row']
 export type SubscriptionInsert = Database['public']['Tables']['subscriptions']['Insert']
 export type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['Update']
 
-// Preorder Tracking Table
-export type PreorderTracking = {
-  id: string
-  importer_id: string
-  shipment_id: string | null
-  tracking_number: string
-  product_id: string | null
-  verified: boolean
-  verified_at: string | null
-  notes: string | null
-  created_at: string
-}
+export type PreorderTracking = Database['public']['Tables']['preorder_tracking']['Row']
+export type PreorderTrackingInsert = Database['public']['Tables']['preorder_tracking']['Insert']
+export type PreorderTrackingUpdate = Database['public']['Tables']['preorder_tracking']['Update']
 
-// Messaging System Types - See types/messaging.ts
-export * from './messaging'
+export type Conversation = Database['public']['Tables']['conversations']['Row']
+export type ConversationInsert = Database['public']['Tables']['conversations']['Insert']
+export type ConversationUpdate = Database['public']['Tables']['conversations']['Update']
+
+export type Message = Database['public']['Tables']['messages']['Row']
+export type MessageInsert = Database['public']['Tables']['messages']['Insert']
+export type MessageUpdate = Database['public']['Tables']['messages']['Update']
 
 // Extended types with relationships
 export type OrderWithItems = Order & {
   order_items: OrderItem[]
   customer?: Customer | null
+  store_customer?: StoreCustomer | null
 }
 
 export type ProductWithImporter = Product & {
@@ -581,5 +683,6 @@ export type UserWithImporter = User & {
   importer?: Importer | null
 }
 
-// Note: Conversation and Message types are exported from messaging.ts
-// via the export * from './messaging' statement above
+// Messaging types
+export type SenderType = 'customer' | 'importer'
+

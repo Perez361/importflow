@@ -24,7 +24,7 @@ interface Order {
   order_number: string
   status: string
   payment_status: string
-  total_amount: number
+  total: number
   created_at: string
 }
 
@@ -113,8 +113,8 @@ export default function StoreAccountPage() {
     try {
       const { data: ordersData } = await supabase
         .from('orders')
-        .select('id, order_number, status, payment_status, total_amount, created_at')
-        .eq('customer_id', customerId)
+        .select('id, order_number, status, payment_status, total, created_at')
+        .eq('store_customer_id', customerId)
         .order('created_at', { ascending: false })
         .limit(10)
 
@@ -627,7 +627,7 @@ export default function StoreAccountPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-zinc-900 dark:text-white">
-                        {formatCurrency(order.total_amount)}
+                        {formatCurrency(order.total)}
                       </p>
                       <div className="mt-1">
                         {getStatusBadge(order.status)}

@@ -8,6 +8,7 @@ import type { User as AppUser } from '@/types/database'
 export interface AuthUser {
   auth: User | null
   profile: AppUser | null
+  userType: 'super_admin' | 'importer_staff' | 'store_customer' | null
 }
 
 // Get cached profile from sessionStorage
@@ -34,11 +35,20 @@ const clearCachedProfile = () => {
   }
 }
 
+// Determine user type based on profile
+const getUserType = (profile: AppUser | null): AuthUser['userType'] => {
+  if (!profile) return null
+  if (profile.role === 'super_admin') return 'super_admin'
+  if (profile.role === 'importer' || profile.role === 'staff') return 'importer_staff'
+  return null
+}
+
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser>({ auth: null, profile: null })
+  const [user, setUser] = useState<AuthUser>({ auth: null, profile: null, userType: null })
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
   const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const initializationComplete = useRef(false)
   
   // Initialize client only on client side
   useEffect(() => {
@@ -61,12 +71,15 @@ export function useAuth() {
           .eq('id', authUser.id)
           .single()
         
-        // Update cache
         if (profile) {
           sessionStorage.setItem('userProfile', JSON.stringify(profile))
+          setUser({ 
+            auth: authUser, 
+            profile, 
+            userType: getUserType(profile) 
+          })
         }
         
-        setUser(prev => ({ ...prev, profile }))
         return profile
       }
       return null
@@ -76,53 +89,37 @@ export function useAuth() {
     }
   }, [supabase])
 
+  // Fetch profile for importer staff/super admin
+  const fetchImporterProfile = useCallback(async (userId: string): Promise<AppUser | null> => {
+    if (!supabase) return null
+    
+    try {
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      
+      if (profile && !error) {
+        sessionStorage.setItem('userProfile', JSON.stringify(profile))
+        return profile
+      }
+      return null
+    } catch (error) {
+      console.error('Profile fetch error:', error)
+      return null
+    }
+  }, [supabase])
+
   // Initialize auth state - only once on mount
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false)
+    if (!supabase || initializationComplete.current) {
+      if (!supabase) setLoading(false)
       return
     }
     
+    initializationComplete.current = true
     let isMounted = true
-    
-    const fetchProfile = async (userId: string): Promise<AppUser | null> => {
-      try {
-        // Create a timeout promise
-        const timeoutPromise = new Promise<{ data: AppUser | null, error: any }>((resolve) => 
-          setTimeout(() => resolve({ data: null, error: null }), 5000)
-        )
-        
-        // Race between the profile fetch and timeout
-        const profilePromise = supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single()
-        
-        const result = await Promise.race([profilePromise, timeoutPromise]) as any
-        
-        if (result?.data) {
-          sessionStorage.setItem('userProfile', JSON.stringify(result.data))
-          return result.data
-        }
-        
-        // If timed out or error, try direct query
-        const { data: profile, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single()
-        
-        if (profile) {
-          sessionStorage.setItem('userProfile', JSON.stringify(profile))
-        }
-        
-        return profile
-      } catch (error) {
-        console.error('Profile fetch error:', error)
-        return null
-      }
-    }
 
     const initAuth = async () => {
       try {
@@ -135,35 +132,42 @@ export function useAuth() {
           const cachedProfile = getCachedProfile()
           
           if (cachedProfile) {
-            setUser({ auth: session.user, profile: cachedProfile })
-            setLoading(false)
-            setIsInitialized(true)
-            
-            // Then fetch fresh profile in background
-            fetchProfile(session.user.id).then(freshProfile => {
-              if (isMounted && freshProfile) {
-                setUser({ auth: session.user, profile: freshProfile })
-              }
+            setUser({ 
+              auth: session.user, 
+              profile: cachedProfile, 
+              userType: getUserType(cachedProfile) 
             })
+            setLoading(false)
+            
+            // Fetch fresh profile in background to verify
+            const freshProfile = await fetchImporterProfile(session.user.id)
+            if (isMounted && freshProfile) {
+              setUser({ 
+                auth: session.user, 
+                profile: freshProfile, 
+                userType: getUserType(freshProfile) 
+              })
+            }
           } else {
-            const profile = await fetchProfile(session.user.id)
+            const profile = await fetchImporterProfile(session.user.id)
             if (isMounted) {
-              setUser({ auth: session.user, profile })
+              setUser({ 
+                auth: session.user, 
+                profile, 
+                userType: getUserType(profile) 
+              })
               setLoading(false)
-              setIsInitialized(true)
             }
           }
         } else {
-          setUser({ auth: null, profile: null })
+          setUser({ auth: null, profile: null, userType: null })
           setLoading(false)
-          setIsInitialized(true)
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
         if (isMounted) {
-          setUser({ auth: null, profile: null })
+          setUser({ auth: null, profile: null, userType: null })
           setLoading(false)
-          setIsInitialized(true)
         }
       }
     }
@@ -178,9 +182,8 @@ export function useAuth() {
         // Handle sign out
         if (event === 'SIGNED_OUT') {
           clearCachedProfile()
-          setUser({ auth: null, profile: null })
+          setUser({ auth: null, profile: null, userType: null })
           setLoading(false)
-          setIsInitialized(true)
           return
         }
         
@@ -189,19 +192,30 @@ export function useAuth() {
           const cachedProfile = getCachedProfile()
           
           if (cachedProfile) {
-            setUser({ auth: session.user, profile: cachedProfile })
+            setUser({ 
+              auth: session.user, 
+              profile: cachedProfile, 
+              userType: getUserType(cachedProfile) 
+            })
             setLoading(false)
             
             // Fetch fresh in background
-            fetchProfile(session.user.id).then(freshProfile => {
-              if (isMounted && freshProfile) {
-                setUser({ auth: session.user, profile: freshProfile })
-              }
-            })
+            const freshProfile = await fetchImporterProfile(session.user.id)
+            if (isMounted && freshProfile) {
+              setUser({ 
+                auth: session.user, 
+                profile: freshProfile, 
+                userType: getUserType(freshProfile) 
+              })
+            }
           } else {
-            const profile = await fetchProfile(session.user.id)
+            const profile = await fetchImporterProfile(session.user.id)
             if (isMounted) {
-              setUser({ auth: session.user, profile })
+              setUser({ 
+                auth: session.user, 
+                profile, 
+                userType: getUserType(profile) 
+              })
               setLoading(false)
             }
           }
@@ -213,13 +227,13 @@ export function useAuth() {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [supabase, fetchImporterProfile])
 
   // Sign up
   const signUp = useCallback(async (
     email: string, 
     password: string, 
-    metadata?: { full_name?: string; business_name?: string }
+    metadata?: { full_name?: string; business_name?: string; role?: string }
   ) => {
     if (!supabase) return { data: null, error: new Error('Supabase not initialized') }
     
@@ -247,9 +261,12 @@ export function useAuth() {
     return { data, error }
   }, [supabase])
 
-  // Sign out
+  // Sign out - properly clears all state
   const signOut = useCallback(async () => {
     if (!supabase) {
+      // Even without supabase, clear local state and redirect
+      clearCachedProfile()
+      setUser({ auth: null, profile: null, userType: null })
       window.location.href = '/login'
       return { error: null }
     }
@@ -271,18 +288,20 @@ export function useAuth() {
       
       if (error) {
         console.error('Supabase signOut error:', error.message)
-        return { error }
       }
       
-      // Clear local state
-      setUser({ auth: null, profile: null })
-      // Clear cached profile
+      // Always clear local state regardless of auth signOut result
+      setUser({ auth: null, profile: null, userType: null })
       clearCachedProfile()
-      // Reset the client to clear any cached state
       resetClient()
       
       // Determine redirect based on user's role before sign out
-      const redirectUrl = userRole === 'super_admin' ? '/admin/login' : '/login'
+      let redirectUrl = '/login'
+      if (userRole === 'super_admin') {
+        redirectUrl = '/admin/login'
+      } else if (userRole === 'importer' || userRole === 'staff') {
+        redirectUrl = '/login'
+      }
       
       // Use window.location for hard redirect to ensure clean state
       window.location.href = redirectUrl
@@ -291,6 +310,8 @@ export function useAuth() {
     } catch (err) {
       console.error('Unexpected error during signOut:', err)
       // Force redirect anyway
+      clearCachedProfile()
+      setUser({ auth: null, profile: null, userType: null })
       window.location.href = '/login'
       return { error: err as Error }
     }
@@ -332,9 +353,12 @@ export function useAuth() {
       .single()
 
     if (!error && data) {
-      // Update cache
       sessionStorage.setItem('userProfile', JSON.stringify(data))
-      setUser(prev => ({ ...prev, profile: data }))
+      setUser(prev => ({ 
+        ...prev, 
+        profile: data,
+        userType: getUserType(data)
+      }))
     }
 
     return { data, error }
@@ -344,9 +368,9 @@ export function useAuth() {
     user,
     loading,
     isAuthenticated: !!user.auth,
-    isSuperAdmin: user.profile?.role === 'super_admin',
-    isImporter: user.profile?.role === 'importer',
-    isStaff: user.profile?.role === 'staff',
+    isSuperAdmin: user.userType === 'super_admin',
+    isImporterStaff: user.userType === 'importer_staff',
+    isStoreCustomer: user.userType === 'store_customer',
     isInitialized,
     refreshProfile,
     signUp,
@@ -357,3 +381,4 @@ export function useAuth() {
     updateProfile,
   }
 }
+

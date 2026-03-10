@@ -73,10 +73,68 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   console.log('[Store Callback] Importer found:', importer.id)
 
-  // Create or update store customer record
+  // Check if store customer already exists for this user
+  const { data: existingCustomer } = await supabase
+    .from('store_customers')
+    .select('id, is_active')
+    .eq('auth_id', user.id)
+    .eq('importer_id', importer.id)
+    .single()
+
+  if (existingCustomer) {
+    // Customer exists - update if inactive
+    if (!existingCustomer.is_active) {
+      await supabase
+        .from('store_customers')
+        .update({ is_active: true })
+        .eq('id', existingCustomer.id)
+    }
+    
+    // Update with latest metadata
+    const { data: customer, error: customerError } = await supabase
+      .from('store_customers')
+      .update({
+        name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Customer',
+        phone: user.user_metadata?.phone || null,
+        avatar_url: user.user_metadata?.avatar_url || null,
+        is_active: true,
+      })
+      .eq('id', existingCustomer.id)
+      .select()
+      .single()
+
+    if (customerError) {
+      console.error('[Store Callback] Error updating customer:', customerError)
+      await supabase.auth.signOut()
+      return NextResponse.redirect(`${origin}/store/${slug}/login?error=update_failed`)
+    }
+
+    console.log('[Store Callback] Customer updated:', customer.id)
+    
+    // Sign out Supabase session - store customer uses localStorage only
+    await supabase.auth.signOut()
+    
+    // Redirect to account with customer data
+    const customerData = {
+      id: customer.id,
+      auth_id: user.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      city: customer.city,
+      importer_id: importer.id,
+      avatar_url: customer.avatar_url
+    }
+
+    const encodedCustomer = encodeURIComponent(JSON.stringify(customerData))
+    return NextResponse.redirect(`${origin}/store/${slug}/account?oauth_success=true&customer_data=${encodedCustomer}`)
+  }
+
+  // Create new store customer record
   const { data: customer, error: customerError } = await supabase
     .from('store_customers')
-    .upsert({
+    .insert({
       importer_id: importer.id,
       auth_id: user.id,
       email: user.email || '',
@@ -85,86 +143,34 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       avatar_url: user.user_metadata?.avatar_url || null,
       password_hash: null,
       is_active: true,
-    }, {
-      onConflict: 'importer_id, auth_id'
     })
     .select()
     .single()
 
-  console.log('[Store Callback] Upsert result:', { customer, customerError })
-
-  // If upsert failed or didn't return data, fetch the customer
-  let finalCustomer = customer
-  if (customerError || !finalCustomer) {
-    console.log('[Store Callback] Fetching existing customer after upsert')
-    const { data: fetchedCustomer, error: fetchError } = await supabase
-      .from('store_customers')
-      .select('*')
-      .eq('importer_id', importer.id)
-      .eq('auth_id', user.id)
-      .single()
-    
-    console.log('[Store Callback] Fetch result:', { fetchedCustomer, fetchError })
-    finalCustomer = fetchedCustomer
-  }
-
-  if (!finalCustomer) {
-    console.error('[Store Callback] Could not find or create customer')
-    // Sign out before redirecting
+  if (customerError) {
+    console.error('[Store Callback] Error creating customer:', customerError)
     await supabase.auth.signOut()
-    return NextResponse.redirect(`${origin}/store/${slug}/login?error=customer_creation_failed`)
+    return NextResponse.redirect(`${origin}/store/${slug}/login?error=customer_creation_failed&message=${encodeURIComponent(customerError.message)}`)
   }
 
-  console.log('[Store Callback] Customer created/updated:', finalCustomer.id)
+  console.log('[Store Callback] Customer created:', customer.id)
 
-  // Also create/update user in users table with 'customer' role
-  // This allows store customers to have a proper user record for auth purposes
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('id, role')
-    .eq('id', user.id)
-    .single()
-
-  if (existingUser) {
-    // User exists - update to customer role (store customers should always be customer)
-    // This ensures even existing importers get updated to customer
-    if (existingUser.role !== 'customer') {
-      await supabase
-        .from('users')
-        .update({ role: 'customer' })
-        .eq('id', user.id)
-      console.log('[Store Callback] Updated user role to customer')
-    }
-  } else {
-    // Create new user with customer role
-    await supabase
-      .from('users')
-      .insert({
-        id: user.id,
-        email: user.email || '',
-        full_name: finalCustomer.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
-        role: 'customer',
-        is_active: true,
-      })
-    console.log('[Store Callback] Created user with customer role')
-  }
-
-  // CRITICAL: Sign out the Supabase session after creating the customer
+  // Sign out Supabase session - store customer uses localStorage only
   // This prevents session conflicts between dashboard and storefront
-  // Storefront customers only use localStorage, not Supabase auth cookies
   await supabase.auth.signOut()
   console.log('[Store Callback] Signed out Supabase session - customer will use localStorage only')
 
   // Encode customer data to pass in URL for client-side localStorage
   const customerData = {
-    id: finalCustomer.id,
+    id: customer.id,
     auth_id: user.id,
-    name: finalCustomer.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
-    email: finalCustomer.email || user.email || '',
-    phone: finalCustomer.phone || user.user_metadata?.phone || null,
-    address: finalCustomer.address || null,
-    city: finalCustomer.city || null,
-    importer_id: importer.id
+    name: customer.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer',
+    email: customer.email || user.email || '',
+    phone: customer.phone || user.user_metadata?.phone || null,
+    address: customer.address || null,
+    city: customer.city || null,
+    importer_id: importer.id,
+    avatar_url: customer.avatar_url || user.user_metadata?.avatar_url || null
   }
 
   const encodedCustomer = encodeURIComponent(JSON.stringify(customerData))
