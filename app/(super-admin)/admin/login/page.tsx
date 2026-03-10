@@ -228,13 +228,7 @@ function LoginForm() {
 
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
-          Don't have an admin account?{' '}
-          <Link
-            href="/admin/register"
-            className="text-primary hover:text-primary/80 font-medium transition-colors"
-          >
-            Request access
-          </Link>
+          Contact the system administrator for access.
         </p>
       </div>
     </div>
